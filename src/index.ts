@@ -123,7 +123,7 @@ await yargsInstance
 				})
 				.option('format', {
 					choices: PAPER_FORMATS,
-					default: 'a4' as const,
+					default: 'letter' as const,
 					describe:
 						"The paper format for the PDF file. Refer to Puppeteer's paper formats for more details.",
 				})
