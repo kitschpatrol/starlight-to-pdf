@@ -1,11 +1,11 @@
 import type { Page } from 'puppeteer'
+import { log } from 'lognow'
 import type { Contents, GetAllContentParams, GetAllContentReturn } from './types'
 import { CLASSNAMES, SELECTORS } from './constants'
 import errorCatcher from './error-catcher'
 import { ParsingError } from './errors'
 import getNextUrl from './get-next-url'
 import gotoWithRetry from './goto-with-retry'
-import { logger } from './logger'
 
 type ProcessPageContentReturn = {
 	contents: Contents
@@ -130,9 +130,9 @@ async function getAllContent({
 		const isLastPage = currentUrl === last
 
 		if (isExcluded) {
-			logger.info(`Page excluded: ${currentUrl}`)
+			log.info(`Page excluded: ${currentUrl}`)
 		} else {
-			logger.info(`Parsing page: ${currentUrl}`)
+			log.info(`Parsing page: ${currentUrl}`)
 			const { contents, html } = await processPageContent(
 				page,
 				options.contentsLinks === 'internal',
@@ -144,7 +144,7 @@ async function getAllContent({
 		const nextUrl = urlQueue ? urlQueue.shift() : await getNextUrl(page)
 		if (isLastPage || !nextUrl) {
 			if (isLastPage) {
-				logger.info(`Parsing finishes: encountered user defined last page: ${currentUrl}`)
+				log.info(`Parsing finishes: encountered user defined last page: ${currentUrl}`)
 			}
 
 			break
@@ -153,7 +153,7 @@ async function getAllContent({
 		await gotoWithRetry(page, nextUrl.href, { waitUntil: options.pageWaitUntil })
 	}
 
-	logger.info(`All pages were parsed. Web pages total: ${contentsData.size}.`)
+	log.info(`All pages were parsed. Web pages total: ${contentsData.size}.`)
 	return {
 		contentsData,
 		htmlContent: accumulatedHtml,

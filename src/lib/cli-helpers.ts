@@ -1,8 +1,8 @@
 import type { PaperFormat, PDFMargin } from 'puppeteer'
+import { log } from 'lognow'
 import { sep } from 'node:path'
 import { BASE_PAPER_FORMATS, PAPER_FORMATS } from './constants'
 import { ValidationError } from './errors'
-import { logger } from './logger'
 
 // Windows-specific characters and reserved names
 const INVALID_PATH_CHARS = /[<>:"\|?*]/v
@@ -19,7 +19,7 @@ export function parseBaseUrl(url: string): URL {
 
 	if (!HTTP_PROTOCOL_REGEX.test(url)) {
 		userUrl = `https://${url}`
-		logger.warn(`Protocol is not specified. Defaulting to HTTPS. Resulting URL: ${userUrl}`)
+		log.warn(`Protocol is not specified. Defaulting to HTTPS. Resulting URL: ${userUrl}`)
 	}
 
 	if (!URL.canParse(userUrl)) {

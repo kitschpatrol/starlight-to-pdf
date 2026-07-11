@@ -1,7 +1,7 @@
+import { log } from 'lognow'
 import type { Contents, GetAllContentReturn, StarlightToPdfOptions } from './types'
 import { CLASSNAMES } from './constants'
 import getFileContent from './get-file-content'
-import { logger } from './logger'
 
 function composeListElement(contentData: Contents[]): string {
 	let contentsHtml = ''
@@ -23,7 +23,7 @@ function createContents(contentData: Contents[], options: StarlightToPdfOptions)
 	const defaultContentsName = 'Contents'
 	const contentsName = options.contentsName ?? defaultContentsName
 
-	logger.info(
+	log.info(
 		`Created table of contents.${
 			contentsName === defaultContentsName ? '' : ` User defined name: \`${contentsName}\``
 		}`,

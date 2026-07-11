@@ -1,7 +1,7 @@
 import type { Page } from 'puppeteer'
+import { log } from 'lognow'
 import getNextUrl from './get-next-url'
 import gotoWithRetry from './goto-with-retry'
-import { logger } from './logger'
 import { getTopicUrls } from './sidebar-topics'
 
 type GetStartingUrlParams = {
@@ -56,7 +56,7 @@ async function getStartingUrl(
 			continue
 		}
 
-		logger.info(`Looking for next page. Navigating to ${candidateUrl.href}...`)
+		log.info(`Looking for next page. Navigating to ${candidateUrl.href}...`)
 
 		visitedLinks.add(candidateUrl.href)
 		const nextResult = await getStartingUrl({ page, url: candidateUrl }, visitedLinks)

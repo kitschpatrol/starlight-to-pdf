@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { setDefaultLogOptions } from 'lognow'
+import { log, setDefaultLogOptions } from 'lognow'
 import yargs from 'yargs'
 import { hideBin } from 'yargs/helpers'
 import type { StarlightToPdfOptions } from './lib/types'
@@ -19,23 +19,21 @@ import {
 } from './lib/cli-helpers'
 import { DEFAULT_MARGINS, SCROLL_DELAY_MS, TIMEOUT_MS, WAIT_UNTIL_OPTIONS } from './lib/constants'
 import { ParsingError, ValidationError } from './lib/errors'
-import { logger } from './lib/logger'
 import { starlightToPdf } from './lib/starlight-to-pdf'
 
 const cliCommandName = Object.keys(bin).at(0) ?? 'starlight-to-pdf'
 
 function handleError(error: unknown): never {
 	if (error instanceof ValidationError || error instanceof ParsingError) {
-		logger.error(`${error.name}: ${error.message}`)
+		log.error(`${error.name}: ${error.message}`)
 		if (error.additionalInfo?.originalErrorMessage !== undefined) {
-			logger.error(error.additionalInfo.originalErrorMessage)
+			log.error(error.additionalInfo.originalErrorMessage)
 		}
 	} else {
-		logger.errorWithCause('Unknown error occurred.', error)
+		log.withError(error).error('Unknown error occurred.')
 	}
 
-	logger.error('Program exits.')
-	logger.stop()
+	log.error('Program exits.')
 	process.exit(1)
 }
 

@@ -1,8 +1,8 @@
+import { log } from 'lognow'
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 import errorCatcher from './error-catcher'
 import { ParsingError } from './errors'
-import { logger } from './logger'
 
 /**
  * Reads the content of a user-provided file, throwing a `ParsingError` with
@@ -22,7 +22,7 @@ async function getFileContent(route: string): Promise<string> {
 		})
 	}
 
-	logger.info(`Extracted content from ${filePath}`)
+	log.info(`Extracted content from ${filePath}`)
 
 	return content
 }

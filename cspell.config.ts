@@ -10,6 +10,5 @@ export default cspellConfig({
 		'percollate',
 		'sandboxing',
 		'setuid',
-		'yocto',
 	],
 })

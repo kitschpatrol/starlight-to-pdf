@@ -1,7 +1,7 @@
 import type { Page, PuppeteerLifeCycleEvent } from 'puppeteer'
+import { log } from 'lognow'
 import { SELECTORS } from './constants'
 import gotoWithRetry from './goto-with-retry'
-import { logger } from './logger'
 
 function toInternalUrls(hrefs: string[], base: URL): URL[] {
 	const urls: URL[] = []
@@ -64,7 +64,7 @@ export async function getTopicsPageUrls({
 	const seen = new Set<string>()
 
 	for (const topicUrl of topicUrls) {
-		logger.info(`Collecting topic pages from ${topicUrl.href}...`)
+		log.info(`Collecting topic pages from ${topicUrl.href}...`)
 		await gotoWithRetry(page, topicUrl.href, { waitUntil })
 
 		const hrefs = await page.$$eval(

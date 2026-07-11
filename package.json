@@ -47,8 +47,7 @@
 	},
 	"dependencies": {
 		"lognow": "^0.6.2",
-		"yargs": "^18.0.0",
-		"yocto-spinner": "^1.2.1"
+		"yargs": "^18.0.0"
 	},
 	"devDependencies": {
 		"@kitschpatrol/shared-config": "^8.0.0",

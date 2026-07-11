@@ -1,11 +1,11 @@
 import type { Page, PDFOptions } from 'puppeteer'
+import { log } from 'lognow'
 import { mkdir } from 'node:fs/promises'
 import path from 'node:path'
 import type { StarlightToPdfOptions } from './types'
 import errorCatcher from './error-catcher'
 import { ParsingError } from './errors'
 import getFileContent from './get-file-content'
-import { logger } from './logger'
 
 type RecordPdfParams = {
 	hostname: string
@@ -17,7 +17,7 @@ type RecordPdfParams = {
  * Renders the current page to a PDF file at the configured location.
  */
 async function recordPdf({ hostname, options, page }: RecordPdfParams): Promise<PDFOptions> {
-	logger.info('Generating PDF. Please wait.')
+	log.info('Generating PDF. Please wait.')
 
 	const filename = `${options.filename ?? hostname}.pdf`
 	const directoryPath = path.resolve(path.normalize(options.path ?? './'))
@@ -31,7 +31,7 @@ async function recordPdf({ hostname, options, page }: RecordPdfParams): Promise<
 	}
 
 	if (createdPath !== undefined) {
-		logger.info(`Created the PDF target directory: ${directoryPath}`)
+		log.info(`Created the PDF target directory: ${directoryPath}`)
 	}
 
 	const pdfOptions: PDFOptions = {
@@ -61,7 +61,7 @@ async function recordPdf({ hostname, options, page }: RecordPdfParams): Promise<
 		})
 	}
 
-	logger.info(`PDF file was generated and saved to ${pdfOptions.path ?? ''}`)
+	log.info(`PDF file was generated and saved to ${pdfOptions.path ?? ''}`)
 
 	return pdfOptions
 }
