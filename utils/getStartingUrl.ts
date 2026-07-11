@@ -2,6 +2,7 @@ import type { Page } from 'puppeteer';
 
 import { cliLink, cliNeutralText } from './cliStylings';
 import getNextUrl from './getNextUrl';
+import { getTopicUrls } from './sidebarTopics';
 import gotoWithRetry from './gotoWithRetry';
 import { logger } from '../services/Logger';
 
@@ -18,6 +19,11 @@ async function getStartingUrl(
   const nextUrl = await getNextUrl(page);
 
   if (nextUrl) return url;
+
+  // pages of sites with the `starlight-sidebar-topics` plugin may lack
+  // pagination links, so the topics navigation marks docs content too
+  const topicUrls = await getTopicUrls(page);
+  if (topicUrls.length > 0) return url;
 
   // recursive search for the page to start parsing
   const links = await page.$$eval('a', links => links.map(link => link.href));

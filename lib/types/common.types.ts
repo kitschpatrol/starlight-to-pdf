@@ -23,6 +23,13 @@ export interface GetAllContentParams {
   contentsData: Set<Contents>;
   page: Page;
   cliArgs: CliArgs;
+  /**
+   * Predefined list of pages to parse instead of following
+   * `rel="next"` pagination links. Used for sites with the
+   * `starlight-sidebar-topics` plugin, where pagination does not
+   * cover all topics.
+   */
+  urlQueue?: URL[];
 }
 
 export type GetAllContentReturn = Pick<

@@ -46,7 +46,10 @@ export const SELECTORS = {
   mainInfo: `.${CLASSNAMES.starlight.markdownContent}`,
   subheading: `.${CLASSNAMES.starlight.markdownContent} h2`,
   nextLink: "a[rel='next']",
-  starlightPrintStyles: 'link[media="print"]'
+  sidebarLink: 'nav.sidebar a[href]',
+  starlightPrintStyles: 'link[media="print"]',
+  topicsList: '.starlight-sidebar-topics',
+  topicLink: 'nav.sidebar .starlight-sidebar-topics a[href]'
 } as const;
 
 export const basePaperFormats = [

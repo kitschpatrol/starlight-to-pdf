@@ -1,4 +1,8 @@
-import puppeteer, { Browser, type LaunchOptions } from 'puppeteer';
+import puppeteer, {
+  Browser,
+  type LaunchOptions,
+  type PuppeteerLifeCycleEvent
+} from 'puppeteer';
 import { scrollPageToBottom } from 'puppeteer-autoscroll-down';
 
 import type CliArgs from '../services/CliArgs';
@@ -11,7 +15,9 @@ import {
 import { composeBody, injectBody } from '../utils/body';
 import getAllContent from '../utils/getAllContent';
 import getStartingUrl from '../utils/getStartingUrl';
+import { getTopicsPageUrls, getTopicUrls } from '../utils/sidebarTopics';
 import getVersion from '../utils/getVersion';
+import gotoWithRetry from '../utils/gotoWithRetry';
 import { logger } from '../services/Logger';
 import { ParsingError, ValidationError } from '../services/Errors';
 import recordPdf from '../utils/recordPdf';
@@ -69,15 +75,46 @@ async function mainProcess(cliArgs: CliArgs) {
       );
     }
 
+    let contentStartUrl = startUrl;
+    let urlQueue: URL[] | undefined;
+
+    // `getStartingUrl` leaves the page at `startUrl`
+    const topicUrls = await getTopicUrls(page);
+    if (topicUrls.length > 0) {
+      logger.info(
+        cliNeutralText(
+          `Sidebar topics plugin detected. Topics found: ${cliTextStyle(
+            topicUrls.length,
+            'bold'
+          )}.`
+        )
+      );
+
+      const waitUntil =
+        (cliArgs.values['page-wait-until'] as PuppeteerLifeCycleEvent) ??
+        'domcontentloaded';
+      const pageUrls = await getTopicsPageUrls({ page, topicUrls, waitUntil });
+      const [firstUrl, ...restUrls] = pageUrls;
+
+      if (firstUrl) {
+        contentStartUrl = firstUrl;
+        urlQueue = restUrls;
+        await gotoWithRetry(page, firstUrl.href, { waitUntil });
+      }
+    }
+
     logger.info(
-      `Docs content was found. Starting page: ${cliLink(startUrl.href)}\n`
+      `Docs content was found. Starting page: ${cliLink(
+        contentStartUrl.href
+      )}\n`
     );
 
     const { htmlContent, contentsData } = await getAllContent({
       page,
       htmlContent: '',
       contentsData: new Set(),
-      cliArgs
+      cliArgs,
+      urlQueue
     });
 
     const body = await composeBody({
@@ -88,7 +125,7 @@ async function mainProcess(cliArgs: CliArgs) {
     });
 
     logger.info(cliNeutralText('Adjusting content. It may take a while...'));
-    await page.goto(startUrl.href, {
+    await page.goto(contentStartUrl.href, {
       waitUntil: 'networkidle2'
     });
     await page.evaluate(

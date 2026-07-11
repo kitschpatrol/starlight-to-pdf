@@ -7,7 +7,14 @@
 
 [![starlight to pdf banner image](./readme_assets/starlight-to-pdf.svg)](#starlight-to-pdf)
 
+> This is a fork of
+> [Linkerin/starlight-to-pdf](https://github.com/Linkerin/starlight-to-pdf)
+> that adds support for sites using the
+> [starlight-sidebar-topics](https://github.com/HiDeoo/starlight-sidebar-topics)
+> plugin. See [🗂️ Sidebar topics support](#topics).
+
 - [Description](#description)
+  - [🗂️ Sidebar topics support](#topics)
 - [⌨️ Getting started](#start)
 - [👨‍💻 CLI Flags Reference](#flags)
   - [Usage example](#usage)
@@ -32,6 +39,24 @@ A command-line tool for converting documentation websites built with
 If you are interested in the development process, check out the
 [Transforming Starlight into PDF: experience and insights](https://dev.to/linkerin/transforming-starlight-into-pdf-experience-and-insights-j1d)
 article.
+
+### 🗂️ Sidebar topics support <a id="topics"></a>
+
+This fork supports sites that use the
+[starlight-sidebar-topics](https://github.com/HiDeoo/starlight-sidebar-topics)
+plugin. On such sites the sidebar is split into topics, and the `rel="next"`
+pagination links the original crawler follows do not span all of them — only
+the pages of a single topic end up in the PDF.
+
+When the plugin's topics navigation is detected, the tool switches strategy: it
+visits every topic and collects the topic's landing page together with the
+links of its sidebar. No extra flags are needed.
+
+- Pages appear in the PDF grouped by topic, in sidebar order.
+- Topic entries that link to other domains are skipped.
+- `--exclude`, `--last` and all other flags work as usual.
+- Sites without the plugin are crawled exactly as before, by following
+  pagination links.
 
 ## ⌨️ Getting started <a id="start"></a>
 

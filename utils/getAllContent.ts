@@ -145,7 +145,8 @@ async function getAllContent({
   contentsData,
   htmlContent,
   page,
-  cliArgs
+  cliArgs,
+  urlQueue
 }: GetAllContentParams): Promise<GetAllContentReturn> {
   let parsedHtml = '';
   const currUrl = page.url();
@@ -170,7 +171,7 @@ async function getAllContent({
 
   const updatedHtmlContent = htmlContent + parsedHtml;
 
-  const nextUrl = await getNextUrl(page);
+  const nextUrl = urlQueue ? urlQueue.shift() ?? null : await getNextUrl(page);
   if (isLastPage || !nextUrl) {
     if (isLastPage) {
       logger.info(
@@ -202,7 +203,8 @@ async function getAllContent({
     htmlContent: updatedHtmlContent,
     contentsData: contentsData,
     page,
-    cliArgs
+    cliArgs,
+    urlQueue
   });
 }
 
