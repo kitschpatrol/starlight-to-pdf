@@ -8,7 +8,7 @@
     "starlight-to-pdf": "index.js"
   },
   "scripts": {
-    "build": "rm -rf ./dist && bun check && bun build ./index.ts --outdir ./dist --target node  --sourcemap=none --external puppeteer --external puppeteer-autoscroll-down --splitting --minify && cp package.json README.md ./dist",
+    "build": "pnpm check && tsdown ./index.ts --target node24 --minify --no-fixed-extension && cp package.json README.md ./dist",
     "check": "tsc --noEmit",
     "pack": "cd dist && npm pack --pack-destination ~/Dev/npm-test/",
     "publish:prod": "cd dist && npm publish",
@@ -34,9 +34,10 @@
     "url": "https://github.com/Linkerin/starlight-to-pdf/issues"
   },
   "devDependencies": {
-    "@types/bun": "latest",
+    "@types/node": "26.1.1",
     "puppeteer": "^23.10.4",
     "puppeteer-autoscroll-down": "^2.0.0",
+    "tsdown": "0.22.4",
     "typescript": "^5.7.3"
   },
   "peerDependencies": {
