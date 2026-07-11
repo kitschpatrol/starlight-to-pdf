@@ -1,2 +1,21 @@
+publicHoistPattern:
+  - '@kitschpatrol/repo-config'
+  - '@kitschpatrol/typescript-config'
+  - 'case-police'
+  - '*cspell*'
+  - '*eslint*'
+  - '*knip*'
+  - '*mdat*'
+  - '*prettier*'
+  - '*remark*'
+  - '*stylelint*'
 allowBuilds:
   puppeteer: true
+  unrs-resolver: true
+minimumReleaseAgeExclude:
+  - '@kitschpatrol/*'
+  - 'lognow'
+  - 'mdat'
+  - 'mdat-plugin-cli-help'
+  - 'poptab'
+  - 'remark-mdat'

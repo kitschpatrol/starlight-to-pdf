@@ -1,50 +1,78 @@
 {
-  "name": "starlight-to-pdf",
-  "version": "1.4.0",
-  "description": "A command-line tool to convert Starlight documentation websites into PDF files.",
-  "source": "index.js",
-  "type": "module",
-  "bin": {
-    "starlight-to-pdf": "index.js"
-  },
-  "scripts": {
-    "build": "pnpm check && tsdown ./index.ts --target node24 --minify --no-fixed-extension && cp package.json README.md ./dist",
-    "check": "tsc --noEmit",
-    "pack": "cd dist && npm pack --pack-destination ~/Dev/npm-test/",
-    "publish:prod": "cd dist && npm publish",
-    "publish:check": "cd dist && npm publish --dry-run"
-  },
-  "sideEffects": false,
-  "keywords": [
-    "starlight",
-    "pdf",
-    "docs",
-    "convert",
-    "documentation",
-    "astro",
-    "cli"
-  ],
-  "author": "Alexei Gusev (Linkerin)",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Linkerin/starlight-to-pdf.git"
-  },
-  "bugs": {
-    "url": "https://github.com/Linkerin/starlight-to-pdf/issues"
-  },
-  "devDependencies": {
-    "@types/node": "24.13.3",
-    "puppeteer": "^25.3.0",
-    "puppeteer-autoscroll-down": "^2.0.1",
-    "tsdown": "0.22.4",
-    "typescript": "^6.0.3"
-  },
-  "peerDependencies": {
-    "puppeteer": "^25.3.0",
-    "puppeteer-autoscroll-down": "^2.0.0"
-  },
-  "dependencies": {
-    "yocto-spinner": "1.2.1"
-  }
+	"name": "@kitschpatrol/starlight-to-pdf",
+	"version": "1.4.0",
+	"description": "A command-line tool to convert Starlight documentation websites into PDF files.",
+	"keywords": [
+		"starlight",
+		"pdf",
+		"docs",
+		"convert",
+		"documentation",
+		"astro",
+		"cli"
+	],
+	"homepage": "https://github.com/kitschpatrol/starlight-to-pdf",
+	"bugs": "https://github.com/kitschpatrol/starlight-to-pdf/issues",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/kitschpatrol/starlight-to-pdf.git"
+	},
+	"license": "MIT",
+	"author": {
+		"name": "Alexei Gusev",
+		"email": "gusev@snipshot.dev"
+	},
+	"contributors": [
+		{
+			"name": "Eric Mika",
+			"email": "eric@ericmika.com",
+			"url": "https://ericmika.com"
+		}
+	],
+	"sideEffects": false,
+	"type": "module",
+	"bin": {
+		"starlight-to-pdf": "dist/index.js"
+	},
+	"files": [
+		"dist/*"
+	],
+	"scripts": {
+		"build": "tsdown",
+		"clean": "shx rm -f pnpm-lock.yaml && git clean -fdX -e !.claude/",
+		"fix": "ksc fix",
+		"lint": "ksc lint",
+		"release": "bumpp --commit 'Release: %s' && pnpm build && NPM_AUTH_TOKEN=$(op read 'op://Personal/npm/token') && pnpm publish",
+		"test": "vitest run"
+	},
+	"dependencies": {
+		"lognow": "^0.6.2",
+		"yargs": "^18.0.0",
+		"yocto-spinner": "^1.2.1"
+	},
+	"devDependencies": {
+		"@kitschpatrol/shared-config": "^8.0.0",
+		"@types/node": "~24.13.3",
+		"@types/yargs": "^17.0.35",
+		"bumpp": "^11.1.0",
+		"mdat-plugin-cli-help": "^3.0.2",
+		"publint": "^0.3.21",
+		"puppeteer": "^25.3.0",
+		"puppeteer-autoscroll-down": "^2.0.1",
+		"shx": "^0.4.0",
+		"tsdown": "^0.22.3",
+		"typescript": "~6.0.3",
+		"vitest": "^4.1.9"
+	},
+	"peerDependencies": {
+		"puppeteer": "^25.3.0",
+		"puppeteer-autoscroll-down": "^2.0.1"
+	},
+	"packageManager": "pnpm@11.11.0",
+	"engines": {
+		"node": ">=24.16.0"
+	},
+	"publishConfig": {
+		"access": "public"
+	}
 }

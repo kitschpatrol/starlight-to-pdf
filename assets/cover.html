@@ -1,0 +1,37 @@
+<style>
+	.cover {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: center;
+		width: 100%;
+		height: 100dvh;
+	}
+
+	.cover-content {
+		display: flex;
+		flex-direction: column;
+		gap: 1.5rem;
+		align-items: center;
+		justify-content: center;
+		width: 100%;
+		font-size: 24px;
+		color: rgb(76 60 25);
+	}
+
+	.cover-content img {
+		width: 50%;
+		height: auto;
+	}
+</style>
+<!-- For details on `s2pdf-pagebreak` check https://github.com/Linkerin/starlight-to-pdf?tab=readme-ov-file#classes -->
+<section class="cover s2pdf-pagebreak">
+	<div class="cover-content">
+		<img
+			src="https://raw.githubusercontent.com/Linkerin/spectrum/refs/heads/main/assets/spectrum.svg"
+			alt="Spectrum library logo"
+			loading="eager"
+		/>
+		<h1>Spectrum library documentation</h1>
+	</div>
+</section>
