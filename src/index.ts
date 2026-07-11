@@ -73,7 +73,7 @@ await yargsInstance
 				})
 				.option('contents-links', {
 					choices: ['external', 'internal'] as const,
-					default: 'external' as const,
+					default: 'internal' as const,
 					describe:
 						"Specifies the type of links in the generated table of contents. Use 'internal' for links that navigate within the PDF file or 'external' for links that point to the documentation website.",
 				})
