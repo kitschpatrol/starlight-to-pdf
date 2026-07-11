@@ -10,6 +10,7 @@ export type Contents = {
 /** Fully resolved options controlling crawling and PDF generation. */
 export type StarlightToPdfOptions = {
 	browserExecutable: string | undefined
+	browserNoSandbox: boolean
 	contents: boolean
 	contentsLinks: 'external' | 'internal'
 	contentsName: string | undefined

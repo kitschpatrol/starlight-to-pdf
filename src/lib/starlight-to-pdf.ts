@@ -38,6 +38,11 @@ export async function starlightToPdf(options: StarlightToPdfOptions): Promise<vo
 			logger.info(`Using custom browser executable: ${browserOptions.executablePath}`)
 		}
 
+		if (options.browserNoSandbox) {
+			browserOptions.args = ['--no-sandbox', '--disable-setuid-sandbox']
+			logger.info('Launching browser with sandboxing disabled.')
+		}
+
 		browser = await puppeteer.launch(browserOptions)
 		const page = await browser.newPage()
 		await page.setViewport({ width: 799, height: 1150 })

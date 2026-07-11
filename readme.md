@@ -81,6 +81,7 @@ starlight-to-pdf <url>
 | Option                  | Description                                                                                                                                                                                                                                                            | Type                                                            | Default              |
 | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- | -------------------- |
 | `--browser-executable`  | Specifies a path to a browser executable to use instead of the default one (e.g. --browser-executable /usr/bin/chromium-browser).                                                                                                                                      | `string`                                                        |                      |
+| `--browser-no-sandbox`  | Adds the `--no-sandbox` and `--disable-setuid-sandbox` flags when launching the browser. Useful when running in environments where sandboxing is not available (e.g., certain CI/CD pipelines or Docker containers).                                                   | `boolean`                                                       | `false`              |
 | `--contents`            | Generate a table of contents in the PDF. Use --no-contents to disable it.                                                                                                                                                                                              | `boolean`                                                       | `true`               |
 | `--contents-links`      | Specifies the type of links in the generated table of contents. Use 'internal' for links that navigate within the PDF file or 'external' for links that point to the documentation website.                                                                            | `"external"` `"internal"`                                       | `"external"`         |
 | `--contents-name`       | Customizes the generated table of contents name in the PDF.                                                                                                                                                                                                            | `string`                                                        |                      |
@@ -189,6 +190,8 @@ This script will generate the PDF and save it in the `public/_pdf` folder. If yo
 
 Thanks to [HiDeoo](https://github.com/HiDeoo) for the [starlight-sidebar-topics](https://github.com/HiDeoo/starlight-sidebar-topics) plugin and its documentation site, which doubled as a test fixture for this fork's topics support.
 
+Thanks to [Zach Hall](https://github.com/zshall) for the `--browser-no-sandbox` flag, contributed to the upstream project in [Linkerin/starlight-to-pdf#12](https://github.com/Linkerin/starlight-to-pdf/pull/12) and integrated here.
+
 <!-- contributing -->
 
 ## Contributing
@@ -206,4 +209,3 @@ This repository uses [@kitschpatrol/shared-config](https://github.com/kitschpatr
 Original work: [MIT](license.txt) © Alexei Gusev
 
 Fork modifications: [MIT](license.txt) © [Eric Mika](https://ericmika.com)
-

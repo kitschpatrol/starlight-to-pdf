@@ -60,6 +60,12 @@ await yargsInstance
 						'Specifies a path to a browser executable to use instead of the default one (e.g. --browser-executable /usr/bin/chromium-browser).',
 					type: 'string',
 				})
+				.option('browser-no-sandbox', {
+					default: false,
+					describe:
+						'Adds the `--no-sandbox` and `--disable-setuid-sandbox` flags when launching the browser. Useful when running in environments where sandboxing is not available (e.g., certain CI/CD pipelines or Docker containers).',
+					type: 'boolean',
+				})
 				.option('contents', {
 					default: true,
 					describe: 'Generate a table of contents in the PDF. Use --no-contents to disable it.',
@@ -210,6 +216,7 @@ await yargsInstance
 
 				const options: StarlightToPdfOptions = {
 					browserExecutable: argv.browserExecutable,
+					browserNoSandbox: argv.browserNoSandbox,
 					contents: argv.contents,
 					contentsLinks: argv.contentsLinks,
 					contentsName: argv.contentsName,
