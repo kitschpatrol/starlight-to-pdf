@@ -1,7 +1,6 @@
-import type { PaperFormat, PDFMargin } from 'puppeteer'
+import type { PDFMargin } from 'puppeteer'
 import { log } from 'lognow'
 import { sep } from 'node:path'
-import { BASE_PAPER_FORMATS, PAPER_FORMATS } from './constants'
 import { ValidationError } from './errors'
 
 // Windows-specific characters and reserved names
@@ -144,24 +143,6 @@ export function validateFileExtension(value: string, extension: string, flag: st
 	}
 
 	return value
-}
-
-/**
- * Parses the `--format` value into Puppeteer's `PaperFormat` type. Case
- * variants of the known formats are accepted.
- */
-export function parsePaperFormat(value: string): PaperFormat {
-	if (!isPaperFormat(value)) {
-		throw new ValidationError(
-			`Invalid format value provided: '${value}'.\nAllowed values: '${BASE_PAPER_FORMATS.join("', '")}'.`,
-		)
-	}
-
-	return value
-}
-
-function isPaperFormat(value: string): value is PaperFormat {
-	return PAPER_FORMATS.has(value)
 }
 
 /**

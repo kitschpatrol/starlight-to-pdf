@@ -52,7 +52,13 @@ describe('cli', () => {
 	})
 
 	it('should fail on an invalid format', async () => {
-		const { code, stderr } = await run('https://example.com', '--format', 'A9')
+		const { code, stderr } = await run('https://example.com', '--format', 'a9')
+		expect(code).toBe(1)
+		expect(stderr).toContain('format')
+	})
+
+	it('should fail on an uppercase format', async () => {
+		const { code, stderr } = await run('https://example.com', '--format', 'A4')
 		expect(code).toBe(1)
 		expect(stderr).toContain('format')
 	})

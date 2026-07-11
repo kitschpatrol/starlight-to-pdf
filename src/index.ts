@@ -8,7 +8,6 @@ import { bin, version } from '../package.json' with { type: 'json' }
 import {
 	parseBaseUrl,
 	parseMargins,
-	parsePaperFormat,
 	resolveExcludeUrls,
 	resolveLastUrl,
 	validateFileExtension,
@@ -17,7 +16,13 @@ import {
 	validatePath,
 	validateSpacing,
 } from './lib/cli-helpers'
-import { DEFAULT_MARGINS, SCROLL_DELAY_MS, TIMEOUT_MS, WAIT_UNTIL_OPTIONS } from './lib/constants'
+import {
+	DEFAULT_MARGINS,
+	PAPER_FORMATS,
+	SCROLL_DELAY_MS,
+	TIMEOUT_MS,
+	WAIT_UNTIL_OPTIONS,
+} from './lib/constants'
 import { ParsingError, ValidationError } from './lib/errors'
 import { starlightToPdf } from './lib/starlight-to-pdf'
 
@@ -117,11 +122,10 @@ await yargsInstance
 					type: 'string',
 				})
 				.option('format', {
-					coerce: parsePaperFormat,
-					default: 'A4',
+					choices: PAPER_FORMATS,
+					default: 'a4' as const,
 					describe:
-						"The paper format (e.g., A4, Letter) for the PDF file. Refer to Puppeteer's paper formats for more details.",
-					type: 'string',
+						"The paper format for the PDF file. Refer to Puppeteer's paper formats for more details.",
 				})
 				.option('header', {
 					coerce: (value: string) => validateFileExtension(value, 'html', 'header'),

@@ -1,4 +1,4 @@
-import type { PuppeteerLifeCycleEvent } from 'puppeteer'
+import type { PaperFormat, PuppeteerLifeCycleEvent } from 'puppeteer'
 
 /** CSS class names injected into the assembled document. */
 export const CLASSNAMES = {
@@ -23,30 +23,20 @@ export const SELECTORS = {
 	topicsList: '.starlight-sidebar-topics',
 } as const
 
-/** Paper formats accepted by Puppeteer, as shown in help output. */
-export const BASE_PAPER_FORMATS = [
-	'LETTER',
-	'LEGAL',
-	'TABLOID',
-	'LEDGER',
-	'A0',
-	'A1',
-	'A2',
-	'A3',
-	'A4',
-	'A5',
-	'A6',
-	'Letter',
-	'Legal',
-	'Tabloid',
-	'Ledger',
-] as const
-
-/** All accepted paper format spellings, including lowercase variants. */
-export const PAPER_FORMATS = new Set<string>([
-	...BASE_PAPER_FORMATS,
-	...BASE_PAPER_FORMATS.map((format) => format.toLowerCase()),
-])
+/** Paper formats accepted by the `--format` flag. */
+export const PAPER_FORMATS = [
+	'a0',
+	'a1',
+	'a2',
+	'a3',
+	'a4',
+	'a5',
+	'a6',
+	'ledger',
+	'legal',
+	'letter',
+	'tabloid',
+] as const satisfies readonly PaperFormat[]
 
 /** Default margins for the generated PDF, top right bottom left. */
 export const DEFAULT_MARGINS = '1cm 1cm 1cm 1.5cm'

@@ -1,4 +1,5 @@
-import type { Page, PaperFormat, PDFMargin, PuppeteerLifeCycleEvent } from 'puppeteer'
+import type { Page, PDFMargin, PuppeteerLifeCycleEvent } from 'puppeteer'
+import type { PAPER_FORMATS } from './constants'
 
 /** A parsed page entry in the generated table of contents. */
 export type Contents = {
@@ -20,7 +21,7 @@ export type StarlightToPdfOptions = {
 	filename: string | undefined
 	followingHtml: string | undefined
 	footer: string | undefined
-	format: PaperFormat
+	format: (typeof PAPER_FORMATS)[number]
 	header: string | undefined
 	last: string | undefined
 	margins: PDFMargin

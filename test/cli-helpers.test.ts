@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest'
 import {
 	parseBaseUrl,
 	parseMargins,
-	parsePaperFormat,
 	resolveExcludeUrls,
 	resolveLastUrl,
 	validateFileExtension,
@@ -97,18 +96,6 @@ describe('validateFileExtension', () => {
 		expect(() => validateFileExtension('cover.htm', 'html', 'preceding-html')).toThrow(
 			ValidationError,
 		)
-	})
-})
-
-describe('parsePaperFormat', () => {
-	it('should accept known formats in any case', () => {
-		expect(parsePaperFormat('A4')).toBe('A4')
-		expect(parsePaperFormat('a4')).toBe('a4')
-		expect(parsePaperFormat('Letter')).toBe('Letter')
-	})
-
-	it('should reject unknown formats', () => {
-		expect(() => parsePaperFormat('A9')).toThrow(ValidationError)
 	})
 })
 
