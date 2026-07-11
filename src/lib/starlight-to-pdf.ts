@@ -6,6 +6,7 @@ import type { StarlightToPdfOptions } from './types'
 import { version } from '../../package.json' with { type: 'json' }
 import { composeBody, injectBody } from './body'
 import { SELECTORS } from './constants'
+import applyDynamicPageHeight from './dynamic-page-height'
 import { ParsingError } from './errors'
 import getAllContent from './get-all-content'
 import getStartingUrl from './get-starting-url'
@@ -105,6 +106,10 @@ export async function starlightToPdf(options: StarlightToPdfOptions): Promise<vo
 			delay: options.scrollDelay,
 			size: 1100,
 		})
+
+		if (options.dynamicPageHeight) {
+			await applyDynamicPageHeight(page, options)
+		}
 
 		await recordPdf({ hostname: baseUrl.hostname, options, page })
 

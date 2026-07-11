@@ -15,6 +15,7 @@ export type StarlightToPdfOptions = {
 	contentsLinks: 'external' | 'internal'
 	contentsName: string | undefined
 	cssPageSize: boolean
+	dynamicPageHeight: boolean
 	exclude: Set<string> | undefined
 	filename: string | undefined
 	followingHtml: string | undefined

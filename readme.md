@@ -20,13 +20,16 @@
 
 ## Overview
 
-`starlight-to-pdf` crawls a documentation website built with [Starlight](https://starlight.astro.build) and renders it into a single PDF file, complete with a generated table of contents, an optional PDF outline, and customizable margins, styles, and print headers and footers.
+`@kitschpatrol/starlight-to-pdf` crawls a documentation website built with [Starlight](https://starlight.astro.build) and renders it into a single PDF file, complete with a generated table of contents, an optional PDF outline, and customizable margins, styles, and print headers and footers.
 
-This is a fork of [Linkerin/starlight-to-pdf](https://github.com/Linkerin/starlight-to-pdf) by Alexei Gusev, which adds support for sites that use the [starlight-sidebar-topics](https://github.com/HiDeoo/starlight-sidebar-topics) plugin, updates dependencies, and reworks the project structure a bit to address some matters of preference.
+This is a fork of [Linkerin/starlight-to-pdf](https://github.com/Linkerin/starlight-to-pdf) by Alexei Gusev, which adds a few new features and reworks the project structure a bit to address some matters of preference.
 
-On topic-organized sites, the pagination links the original crawler follows are scoped to a single topic, so only one topic ends up in the PDF. This fork detects the plugin's topics navigation and instead visits every topic, collecting its pages in sidebar order. No extra flags are needed.
+Added functionality includes:
 
-Sites without the plugin are crawled exactly as before, by following pagination links.
+- Automatically detect and correctly crawl sites that use the [starlight-sidebar-topics](https://github.com/HiDeoo/starlight-sidebar-topics) plugin
+- Add `--browser-no-sandbox` flag for compatibility with certain environments
+- Add experimental `--dynamic-page-height` flag that lets page content drive the final page height
+- Change `--contents-links` default to `internal`
 
 ## Getting started
 
@@ -86,6 +89,7 @@ starlight-to-pdf <url>
 | `--contents-links`      | Specifies the type of links in the generated table of contents. Use 'internal' for links that navigate within the PDF file or 'external' for links that point to the documentation website.                                                                            | `"external"` `"internal"`                                       | `"internal"`         |
 | `--contents-name`       | Customizes the generated table of contents name in the PDF.                                                                                                                                                                                                            | `string`                                                        |                      |
 | `--css-page-size`       | Allows setting the PDF page size using CSS `@page`. If the predefined sizes in the '--format' option don't meet your needs, enable this option and specify the desired page size in custom CSS provided via the '--styles' flag (e.g., `@page { size: 8.5in 14in; }`). | `boolean`                                                       | `false`              |
+| `--dynamic-page-height` | Experimental: sizes each PDF page individually so every docs page fits on a single page without breaks — constant width taken from '--format', height as tall as the content requires. Cannot be combined with '--css-page-size'.                                      | `boolean`                                                       | `false`              |
 | `--exclude`<br>`-e`     | A string containing links separated by space that shouldn't be added to the resulting PDF file (e.g. --exclude '/docs/contacts /docs/demo'). You may also provide multiple values: -e /docs/contacts -e /docs/demo.                                                    | `array`                                                         |                      |
 | `--filename`<br>`-f`    | The output filename for the PDF. Default is the hostname of the provided URL.                                                                                                                                                                                          | `string`                                                        |                      |
 | `--following-html`      | Path to an HTML file which content will be inserted at the end of the PDF file. Its behavior is similar to the '--preceding-html' option.                                                                                                                              | `string`                                                        |                      |
@@ -170,7 +174,6 @@ This script will generate the PDF and save it in the `public/_pdf` folder. If yo
 
 - The crawler loads the given URL and searches for the first page with a pagination link or a topics navigation, then either follows the `rel="next"` chain (plain Starlight sites) or visits each topic and collects the links of its sidebar in order (starlight-sidebar-topics sites).
 - Topic entries that link to other domains are skipped, and all flags work as usual.
-- Each page's rendered content is extracted with [Puppeteer](https://pptr.dev) and concatenated into a single document, along with a generated table of contents, before being printed to PDF.
 - Relative to upstream, this fork migrates the runtime from [Bun](https://bun.sh) to [Node.js](https://nodejs.org) (24 or newer), the CLI to [yargs](https://yargs.js.org), logging to [lognow](https://github.com/kitschpatrol/lognow), bundling to [tsdown](https://tsdown.dev), and linting and formatting to [@kitschpatrol/shared-config](https://github.com/kitschpatrol/shared-config). It also drops the progress spinner in favor of plain log output, as suggested in [Linkerin/starlight-to-pdf#13](https://github.com/Linkerin/starlight-to-pdf/issues/13).
 - The original author wrote about the design of the tool in [Transforming Starlight into PDF: experience and insights](https://dev.to/linkerin/transforming-starlight-into-pdf-experience-and-insights-j1d).
 
@@ -186,7 +189,7 @@ This script will generate the PDF and save it in the `public/_pdf` folder. If yo
 
 ## Acknowledgments
 
-[Alexei Gusev](https://github.com/Linkerin) designed and built the original [starlight-to-pdf](https://github.com/Linkerin/starlight-to-pdf), which remains the foundation of this fork; his copyright is preserved in [license.txt](./license.txt) alongside the fork's. The example assets and workflow documentation are his work as well.
+[Alexei Gusev](https://github.com/Linkerin) designed and built the original [starlight-to-pdf](https://github.com/Linkerin/starlight-to-pdf), which was the foundation of this fork; his copyright is preserved in [license.txt](./license.txt) alongside the fork's. The example assets and workflow documentation are his work as well.
 
 Thanks to [HiDeoo](https://github.com/HiDeoo) for the [starlight-sidebar-topics](https://github.com/HiDeoo/starlight-sidebar-topics) plugin and its documentation site, which doubled as a test fixture for this fork's topics support.
 

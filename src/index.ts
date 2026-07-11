@@ -85,6 +85,12 @@ await yargsInstance
 						"Allows setting the PDF page size using CSS `@page`. If the predefined sizes in the '--format' option don't meet your needs, enable this option and specify the desired page size in custom CSS provided via the '--styles' flag (e.g., `@page { size: 8.5in 14in; }`).",
 					type: 'boolean',
 				})
+				.option('dynamic-page-height', {
+					default: false,
+					describe:
+						"Experimental: sizes each PDF page individually so every docs page fits on a single page without breaks — constant width taken from '--format', height as tall as the content requires. Cannot be combined with '--css-page-size'.",
+					type: 'boolean',
+				})
 				.option('exclude', {
 					alias: 'e',
 					array: true,
@@ -212,6 +218,12 @@ await yargsInstance
 					throw new ValidationError('URL for parsing is required.')
 				}
 
+				if (argv.dynamicPageHeight && argv.cssPageSize) {
+					throw new ValidationError(
+						'`--dynamic-page-height` cannot be combined with `--css-page-size`.',
+					)
+				}
+
 				const options: StarlightToPdfOptions = {
 					browserExecutable: argv.browserExecutable,
 					browserNoSandbox: argv.browserNoSandbox,
@@ -219,6 +231,7 @@ await yargsInstance
 					contentsLinks: argv.contentsLinks,
 					contentsName: argv.contentsName,
 					cssPageSize: argv.cssPageSize,
+					dynamicPageHeight: argv.dynamicPageHeight,
 					exclude:
 						argv.exclude === undefined ? undefined : resolveExcludeUrls(argv.exclude, url.origin),
 					filename: argv.filename,

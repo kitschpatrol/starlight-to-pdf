@@ -40,7 +40,7 @@ async function recordPdf({ hostname, options, page }: RecordPdfParams): Promise<
 		margin: options.margins,
 		outline: options.pdfOutline,
 		path: path.resolve(directoryPath, filename),
-		preferCSSPageSize: options.cssPageSize,
+		preferCSSPageSize: options.cssPageSize || options.dynamicPageHeight,
 		printBackground: options.printBg,
 		timeout: options.timeout,
 	}
