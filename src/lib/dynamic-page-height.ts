@@ -1,8 +1,8 @@
 import type { Page, PaperFormat } from 'puppeteer'
-import { log } from 'lognow'
-import type { StarlightToPdfOptions } from './types'
+import type { ResolvedOptions } from './types'
 import { CLASSNAMES } from './constants'
 import { ParsingError } from './errors'
+import { log } from './log'
 
 /** Widths of Puppeteer's paper formats in inches. */
 const PAPER_WIDTHS_INCHES = {
@@ -155,7 +155,7 @@ export function buildPageRules(
  * layout width, then injects named `@page` rules sized to the measurements. The
  * PDF must be recorded with `preferCSSPageSize` for the rules to apply.
  */
-async function applyDynamicPageHeight(page: Page, options: StarlightToPdfOptions): Promise<void> {
+async function applyDynamicPageHeight(page: Page, options: ResolvedOptions): Promise<void> {
 	const pageWidthPixels = formatWidthPixels(options.format)
 
 	const [paddingTop = '0', paddingRight = '0', paddingBottom = '0', paddingLeft = '0'] =

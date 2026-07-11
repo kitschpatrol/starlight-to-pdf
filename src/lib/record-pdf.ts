@@ -1,26 +1,28 @@
 import type { Page, PDFOptions } from 'puppeteer'
-import { log } from 'lognow'
 import { mkdir } from 'node:fs/promises'
 import path from 'node:path'
-import type { StarlightToPdfOptions } from './types'
+import type { ResolvedOptions } from './types'
 import errorCatcher from './error-catcher'
 import { ParsingError } from './errors'
 import getFileContent from './get-file-content'
+import { log } from './log'
 
 type RecordPdfParams = {
 	hostname: string
-	options: StarlightToPdfOptions
+	options: ResolvedOptions
 	page: Page
 }
 
 /**
- * Renders the current page to a PDF file at the configured location.
+ * Renders the current page to a PDF file at the configured location and returns
+ * the absolute path of the written file.
  */
-async function recordPdf({ hostname, options, page }: RecordPdfParams): Promise<PDFOptions> {
+async function recordPdf({ hostname, options, page }: RecordPdfParams): Promise<string> {
 	log.info('Generating PDF. Please wait.')
 
 	const filename = `${options.filename ?? hostname}.pdf`
 	const directoryPath = path.resolve(path.normalize(options.path ?? './'))
+	const pdfPath = path.resolve(directoryPath, filename)
 
 	const [mkdirError, createdPath] = await errorCatcher(mkdir(directoryPath, { recursive: true }))
 	if (mkdirError) {
@@ -39,7 +41,7 @@ async function recordPdf({ hostname, options, page }: RecordPdfParams): Promise<
 		format: options.format,
 		margin: options.margins,
 		outline: options.pdfOutline,
-		path: path.resolve(directoryPath, filename),
+		path: pdfPath,
 		preferCSSPageSize: options.cssPageSize || options.dynamicPageHeight,
 		printBackground: options.printBg,
 		timeout: options.timeout,
@@ -56,14 +58,14 @@ async function recordPdf({ hostname, options, page }: RecordPdfParams): Promise<
 	const [error] = await errorCatcher(page.pdf(pdfOptions))
 
 	if (error) {
-		throw new ParsingError(`PDF generation failed. Target directory: ${pdfOptions.path ?? ''}.`, {
+		throw new ParsingError(`PDF generation failed. Target directory: ${pdfPath}.`, {
 			originalErrorMessage: error.message,
 		})
 	}
 
-	log.info(`PDF file was generated and saved to ${pdfOptions.path ?? ''}`)
+	log.info(`PDF file was generated and saved to ${pdfPath}`)
 
-	return pdfOptions
+	return pdfPath
 }
 
 export default recordPdf

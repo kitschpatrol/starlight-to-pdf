@@ -1,9 +1,7 @@
 import type { Browser, LaunchOptions } from 'puppeteer'
-import { log } from 'lognow'
 import puppeteer from 'puppeteer'
 import { scrollPageToBottom } from 'puppeteer-autoscroll-down'
-import type { StarlightToPdfOptions } from './types'
-import { version } from '../../package.json' with { type: 'json' }
+import type { StarlightToPdfOptions } from './options'
 import { composeBody, injectBody } from './body'
 import { SELECTORS } from './constants'
 import applyDynamicPageHeight from './dynamic-page-height'
@@ -11,34 +9,46 @@ import { ParsingError } from './errors'
 import getAllContent from './get-all-content'
 import getStartingUrl from './get-starting-url'
 import gotoWithRetry from './goto-with-retry'
+import { log } from './log'
+import { resolveOptions } from './options'
 import recordPdf from './record-pdf'
 import { getTopicsPageUrls, getTopicUrls } from './sidebar-topics'
 
+/** Details about a generated PDF file. */
+export type StarlightToPdfResult = {
+	/** Number of documentation pages included in the PDF. */
+	pages: number
+	/** Absolute path of the written PDF file. */
+	path: string
+	/** Total processing time in seconds. */
+	timeSeconds: number
+}
+
 /**
- * Crawls the Starlight documentation site at the configured URL and renders all
- * of its pages into a single PDF file.
+ * Crawls the Starlight documentation site at the given URL and renders all of
+ * its pages into a single PDF file.
  */
-export async function starlightToPdf(options: StarlightToPdfOptions): Promise<void> {
+export async function starlightToPdf(
+	options: StarlightToPdfOptions,
+): Promise<StarlightToPdfResult> {
+	const resolved = resolveOptions(options)
 	let browser: Browser | undefined
 
 	try {
 		const startTime = performance.now()
 
-		log.info('Welcome to Starlight to PDF tool! 📖')
-		log.info(`version: ${version}`)
-
-		const baseUrl = options.url
+		const baseUrl = resolved.url
 
 		const browserOptions: LaunchOptions = {
 			headless: true,
-			protocolTimeout: options.timeout,
+			protocolTimeout: resolved.timeout,
 		}
-		if (options.browserExecutable !== undefined) {
-			browserOptions.executablePath = options.browserExecutable
+		if (resolved.browserExecutable !== undefined) {
+			browserOptions.executablePath = resolved.browserExecutable
 			log.info(`Using custom browser executable: ${browserOptions.executablePath}`)
 		}
 
-		if (options.browserNoSandbox) {
+		if (resolved.browserNoSandbox) {
 			browserOptions.args = ['--no-sandbox', '--disable-setuid-sandbox']
 			log.info('Launching browser with sandboxing disabled.')
 		}
@@ -46,7 +56,7 @@ export async function starlightToPdf(options: StarlightToPdfOptions): Promise<vo
 		browser = await puppeteer.launch(browserOptions)
 		const page = await browser.newPage()
 		await page.setViewport({ width: 799, height: 1150 })
-		page.setDefaultTimeout(options.timeout)
+		page.setDefaultTimeout(resolved.timeout)
 
 		const startUrl = await getStartingUrl({ page, url: baseUrl })
 		if (!startUrl) {
@@ -64,14 +74,14 @@ export async function starlightToPdf(options: StarlightToPdfOptions): Promise<vo
 			const pageUrls = await getTopicsPageUrls({
 				page,
 				topicUrls,
-				waitUntil: options.pageWaitUntil,
+				waitUntil: resolved.pageWaitUntil,
 			})
 			const [firstUrl, ...restUrls] = pageUrls
 
 			if (firstUrl) {
 				contentStartUrl = firstUrl
 				urlQueue = restUrls
-				await gotoWithRetry(page, firstUrl.href, { waitUntil: options.pageWaitUntil })
+				await gotoWithRetry(page, firstUrl.href, { waitUntil: resolved.pageWaitUntil })
 			}
 		}
 
@@ -80,7 +90,7 @@ export async function starlightToPdf(options: StarlightToPdfOptions): Promise<vo
 		const { contentsData, htmlContent } = await getAllContent({
 			contentsData: new Set(),
 			htmlContent: '',
-			options,
+			options: resolved,
 			page,
 			urlQueue,
 		})
@@ -89,7 +99,7 @@ export async function starlightToPdf(options: StarlightToPdfOptions): Promise<vo
 			baseOrigin: baseUrl.origin,
 			contentsData,
 			htmlContent,
-			options,
+			options: resolved,
 		})
 
 		log.info('Adjusting content. It may take a while...')
@@ -99,25 +109,30 @@ export async function starlightToPdf(options: StarlightToPdfOptions): Promise<vo
 		await page.evaluate(
 			injectBody,
 			body,
-			!options.starlightPrintCss,
+			!resolved.starlightPrintCss,
 			SELECTORS.starlightPrintStyles,
 		)
 		await scrollPageToBottom(page, {
-			delay: options.scrollDelay,
+			delay: resolved.scrollDelay,
 			size: 1100,
 		})
 
-		if (options.dynamicPageHeight) {
-			await applyDynamicPageHeight(page, options)
+		if (resolved.dynamicPageHeight) {
+			await applyDynamicPageHeight(page, resolved)
 		}
 
-		await recordPdf({ hostname: baseUrl.hostname, options, page })
+		const pdfPath = await recordPdf({ hostname: baseUrl.hostname, options: resolved, page })
 
 		const finishTime = performance.now()
-		const timeTaken = ((finishTime - startTime) / 1000).toFixed(2)
+		const timeSeconds = Number(((finishTime - startTime) / 1000).toFixed(2))
 
-		log.info(`Total processing time: ${timeTaken}s.`)
-		log.info('Thank you for using Starlight to PDF!✨')
+		log.info(`Total processing time: ${timeSeconds}s.`)
+
+		return {
+			pages: contentsData.size,
+			path: pdfPath,
+			timeSeconds,
+		}
 	} finally {
 		if (browser?.connected) {
 			await browser.close()

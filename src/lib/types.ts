@@ -8,8 +8,11 @@ export type Contents = {
 	url: string
 }
 
-/** Fully resolved options controlling crawling and PDF generation. */
-export type StarlightToPdfOptions = {
+/**
+ * Fully resolved options controlling crawling and PDF generation, produced from
+ * the public `StarlightToPdfOptions` by `resolveOptions`.
+ */
+export type ResolvedOptions = {
 	browserExecutable: string | undefined
 	browserNoSandbox: boolean
 	contents: boolean
@@ -42,7 +45,7 @@ export type StarlightToPdfOptions = {
 export type GetAllContentParams = {
 	contentsData: Set<Contents>
 	htmlContent: string
-	options: StarlightToPdfOptions
+	options: ResolvedOptions
 	page: Page
 	/**
 	 * Predefined list of pages to parse instead of following `rel="next"`

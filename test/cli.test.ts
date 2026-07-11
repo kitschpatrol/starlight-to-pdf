@@ -2,7 +2,7 @@ import { execFile } from 'node:child_process'
 import path from 'node:path'
 import { describe, expect, it } from 'vitest'
 
-const cliPath = path.resolve(import.meta.dirname, '../dist/index.js')
+const cliPath = path.resolve(import.meta.dirname, '../dist/bin/cli.js')
 
 async function run(...args: string[]): Promise<{ code: number; stderr: string; stdout: string }> {
 	return new Promise((resolve, reject) => {

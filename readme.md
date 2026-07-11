@@ -14,7 +14,7 @@
 
 <!-- short-description -->
 
-**A command-line tool to convert Starlight documentation websites into PDF files.**
+**A CLI tool and TypeScript library to convert Starlight documentation websites into PDF files.**
 
 <!-- /short-description -->
 
@@ -26,6 +26,7 @@ This is a fork of [Linkerin/starlight-to-pdf](https://github.com/Linkerin/starli
 
 Added functionality includes:
 
+- Expose a TypeScript API alongside the CLI
 - Automatically detect and correctly crawl sites that use the [starlight-sidebar-topics](https://github.com/HiDeoo/starlight-sidebar-topics) plugin
 - Add `--browser-no-sandbox` flag for compatibility with certain environments
 - Add experimental `--dynamic-page-height` flag that lets page content drive the final page height
@@ -155,19 +156,82 @@ Some things to keep in mind:
 Check [header-template.html](./assets/header-template.html) and [footer-template.html](./assets/footer-template.html) as valid examples.\
 You may also check [the resulting PDF file](./assets/spectrum-docs.pdf).
 
+### Library
+
+The package also exports its functionality as a TypeScript API. Install it locally, along with the `puppeteer` and `puppeteer-autoscroll-down` peer dependencies:
+
+```sh
+npm install @kitschpatrol/starlight-to-pdf puppeteer puppeteer-autoscroll-down
+```
+
+#### API
+
+Then call `starlightToPdf`:
+
+```ts
+import { starlightToPdf } from '@kitschpatrol/starlight-to-pdf'
+
+const result = await starlightToPdf({
+  filename: 'starlight-docs',
+  format: 'a4',
+  pdfOutline: true,
+  url: 'https://starlight.astro.build',
+})
+
+console.log(`Wrote ${result.pages} pages to ${result.path} in ${result.timeSeconds}s`)
+```
+
+Only `url` is required. The options mirror the CLI flags in camelCase and share their defaults, which are also exported as `DEFAULT_STARLIGHT_TO_PDF_OPTIONS`. See the `StarlightToPdfOptions` type for details. Invalid option values throw a `ValidationError`, and crawling or rendering failures throw a `ParsingError` — both are exported.
+
 #### Generating a PDF during local development
 
-To generate a PDF file during local development, add a command like the following to your Starlight project's `package.json`:
+To generate a PDF file during local development, you can write a short script combining calls to Astro's [programmatic API](https://docs.astro.build/en/reference/programmatic-reference/) combined with the `starlightToPdf` command.
+
+```ts
+// ./scripts/pdf.ts
+import { build, preview } from 'astro'
+
+// Build Starlight site
+await build({})
+
+// Start Astro Preview server
+const server = await preview({})
+
+// Export to PDF
+const result = await starlightToPdf({
+  filename: 'starlight-docs',
+  url: `http://${server.host}:${server.port}`,
+})
+
+console.log(`Wrote ${result.pages} pages to ${result.path} in ${result.timeSeconds}s`)
+
+// Clean up server
+await server.stop()
+```
+
+You can then add a command like the following to your Starlight project's `package.json`:
 
 ```jsonc
 {
   "scripts": {
-    "pdf": "npm run build && (npm run preview > /dev/null & sleep 5); lsof -ti:4321 > preview.pid; npx starlight-to-pdf http://localhost:4321 -p ./public/_pdf --filename docs --pdf-outline; kill $(cat preview.pid) && rm preview.pid && echo 'PDF script finished'",
+    "pdf": "tsx ./scripts/pdf.ts",
   },
 }
 ```
 
-This script will generate the PDF and save it in the `public/_pdf` folder. If your preview server uses a non-default port, or your project requires a custom build command, update the script accordingly.
+#### Logging
+
+By default, the library logs progress to the console via [lognow](https://github.com/kitschpatrol/lognow). Use `setLogger` to redirect logging to your own logger — it accepts any Console-like object or [LogLayer](https://loglayer.dev) instance:
+
+```ts
+import { setLogger } from '@kitschpatrol/starlight-to-pdf'
+
+// Redirect library logging to your own logger
+setLogger(console)
+
+// Or call with no arguments to silence library logging entirely
+setLogger()
+```
 
 ## Background
 

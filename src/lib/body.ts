@@ -1,7 +1,7 @@
-import { log } from 'lognow'
-import type { Contents, GetAllContentReturn, StarlightToPdfOptions } from './types'
+import type { Contents, GetAllContentReturn, ResolvedOptions } from './types'
 import { CLASSNAMES } from './constants'
 import getFileContent from './get-file-content'
+import { log } from './log'
 
 function composeListElement(contentData: Contents[]): string {
 	let contentsHtml = ''
@@ -18,7 +18,7 @@ function composeListElement(contentData: Contents[]): string {
 	return `<ul ${CLASSNAMES.contents}>${contentsHtml}</ul>`
 }
 
-function createContents(contentData: Contents[], options: StarlightToPdfOptions): string {
+function createContents(contentData: Contents[], options: ResolvedOptions): string {
 	const list = composeListElement(contentData)
 	const defaultContentsName = 'Contents'
 	const contentsName = options.contentsName ?? defaultContentsName
@@ -37,7 +37,7 @@ function createContents(contentData: Contents[], options: StarlightToPdfOptions)
 
 type ComposeBodyParams = GetAllContentReturn & {
 	baseOrigin: string
-	options: StarlightToPdfOptions
+	options: ResolvedOptions
 }
 
 /**

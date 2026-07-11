@@ -1,8 +1,8 @@
-import { log } from 'lognow'
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 import errorCatcher from './error-catcher'
 import { ParsingError } from './errors'
+import { log } from './log'
 
 /**
  * Reads the content of a user-provided file, throwing a `ParsingError` with

@@ -1,11 +1,11 @@
 import type { Page } from 'puppeteer'
-import { log } from 'lognow'
 import type { Contents, GetAllContentParams, GetAllContentReturn } from './types'
 import { CLASSNAMES, SELECTORS } from './constants'
 import errorCatcher from './error-catcher'
 import { ParsingError } from './errors'
 import getNextUrl from './get-next-url'
 import gotoWithRetry from './goto-with-retry'
+import { log } from './log'
 
 type ProcessPageContentReturn = {
 	contents: Contents

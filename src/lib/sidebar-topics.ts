@@ -1,7 +1,7 @@
 import type { Page, PuppeteerLifeCycleEvent } from 'puppeteer'
-import { log } from 'lognow'
 import { SELECTORS } from './constants'
 import gotoWithRetry from './goto-with-retry'
+import { log } from './log'
 
 function toInternalUrls(hrefs: string[], base: URL): URL[] {
 	const urls: URL[] = []

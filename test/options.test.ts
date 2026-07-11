@@ -1,15 +1,63 @@
 import { describe, expect, it } from 'vitest'
+import { ValidationError } from '../src/lib/errors'
 import {
 	parseBaseUrl,
 	parseMargins,
 	resolveExcludeUrls,
 	resolveLastUrl,
+	resolveOptions,
 	validateFileExtension,
 	validateFilename,
 	validateMilliseconds,
 	validateSpacing,
-} from '../src/lib/cli-helpers'
-import { ValidationError } from '../src/lib/errors'
+} from '../src/lib/options'
+
+describe('resolveOptions', () => {
+	it('should apply defaults and parse a string url', () => {
+		const resolved = resolveOptions({ url: 'https://example.com' })
+		expect(resolved.url.href).toBe('https://example.com/')
+		expect(resolved.format).toBe('letter')
+		expect(resolved.contents).toBe(true)
+		expect(resolved.contentsLinks).toBe('internal')
+		expect(resolved.margins).toEqual({ bottom: '1cm', left: '1.5cm', right: '1cm', top: '1cm' })
+	})
+
+	it('should accept a URL instance and a margin object', () => {
+		const url = new URL('https://example.com/docs')
+		const margins = { bottom: '1cm', left: '2cm', right: '1cm', top: '1cm' }
+		const resolved = resolveOptions({ margins, url })
+		expect(resolved.url).toBe(url)
+		expect(resolved.margins).toEqual(margins)
+	})
+
+	it('should resolve exclude and last against the url origin', () => {
+		const resolved = resolveOptions({
+			exclude: ['/skip'],
+			last: '/end',
+			url: 'https://example.com/docs',
+		})
+		expect(resolved.exclude).toEqual(new Set(['https://example.com/skip/']))
+		expect(resolved.last).toBe('https://example.com/end/')
+	})
+
+	it('should reject combining dynamicPageHeight with cssPageSize', () => {
+		expect(() =>
+			resolveOptions({ cssPageSize: true, dynamicPageHeight: true, url: 'https://example.com' }),
+		).toThrow(ValidationError)
+	})
+
+	it('should reject invalid option values', () => {
+		expect(() => resolveOptions({ margins: '1cm', url: 'https://example.com' })).toThrow(
+			ValidationError,
+		)
+		expect(() => resolveOptions({ styles: 'style.txt', url: 'https://example.com' })).toThrow(
+			ValidationError,
+		)
+		expect(() => resolveOptions({ scrollDelay: -5, url: 'https://example.com' })).toThrow(
+			ValidationError,
+		)
+	})
+})
 
 describe('parseBaseUrl', () => {
 	it('should parse a full URL', () => {

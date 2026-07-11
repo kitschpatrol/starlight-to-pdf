@@ -1,7 +1,7 @@
 import type { Page } from 'puppeteer'
-import { log } from 'lognow'
 import getNextUrl from './get-next-url'
 import gotoWithRetry from './goto-with-retry'
+import { log } from './log'
 import { getTopicUrls } from './sidebar-topics'
 
 type GetStartingUrlParams = {

@@ -1,8 +1,8 @@
 import type { GoToOptions, Page } from 'puppeteer'
-import { log } from 'lognow'
 import { setTimeout as sleep } from 'node:timers/promises'
 import errorCatcher from './error-catcher'
 import { ParsingError } from './errors'
+import { log } from './log'
 
 /**
  * Navigates the page to the given URL, retrying twice on failure.

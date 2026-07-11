@@ -2,7 +2,7 @@ type AdditionalInfo = {
 	originalErrorMessage?: string
 }
 
-/** Error thrown when CLI argument values fail validation. */
+/** Error thrown when option values fail validation. */
 export class ValidationError extends Error {
 	additionalInfo: AdditionalInfo | undefined
 

@@ -1,7 +1,7 @@
 {
 	"name": "@kitschpatrol/starlight-to-pdf",
 	"version": "1.4.0",
-	"description": "A command-line tool to convert Starlight documentation websites into PDF files.",
+	"description": "A CLI tool and TypeScript library to convert Starlight documentation websites into PDF files.",
 	"keywords": [
 		"starlight",
 		"pdf",
@@ -9,7 +9,8 @@
 		"convert",
 		"documentation",
 		"astro",
-		"cli"
+		"cli",
+		"npm-package"
 	],
 	"homepage": "https://github.com/kitschpatrol/starlight-to-pdf",
 	"bugs": "https://github.com/kitschpatrol/starlight-to-pdf/issues",
@@ -19,20 +20,29 @@
 	},
 	"license": "MIT",
 	"author": {
-		"name": "Alexei Gusev",
-		"email": "gusev@snipshot.dev"
+		"name": "Eric Mika",
+		"email": "eric@ericmika.com",
+		"url": "https://ericmika.com"
 	},
 	"contributors": [
 		{
-			"name": "Eric Mika",
-			"email": "eric@ericmika.com",
-			"url": "https://ericmika.com"
+			"name": "Alexei Gusev",
+			"email": "gusev@snipshot.dev"
 		}
 	],
 	"sideEffects": false,
 	"type": "module",
+	"exports": {
+		".": {
+			"types": "./dist/lib/index.d.ts",
+			"import": "./dist/lib/index.js"
+		}
+	},
+	"main": "./dist/lib/index.js",
+	"module": "./dist/lib/index.js",
+	"types": "./dist/lib/index.d.ts",
 	"bin": {
-		"starlight-to-pdf": "dist/index.js"
+		"starlight-to-pdf": "dist/bin/cli.js"
 	},
 	"files": [
 		"dist/*"
@@ -50,7 +60,8 @@
 		"yargs": "^18.0.0"
 	},
 	"devDependencies": {
-		"@kitschpatrol/shared-config": "^8.0.0",
+		"@arethetypeswrong/core": "^0.18.5",
+		"@kitschpatrol/shared-config": "^8.1.0",
 		"@types/node": "~24.13.3",
 		"@types/yargs": "^17.0.35",
 		"bumpp": "^11.1.0",
@@ -59,9 +70,9 @@
 		"puppeteer": "^25.3.0",
 		"puppeteer-autoscroll-down": "^2.0.1",
 		"shx": "^0.4.0",
-		"tsdown": "^0.22.3",
+		"tsdown": "^0.22.4",
 		"typescript": "~6.0.3",
-		"vitest": "^4.1.9"
+		"vitest": "^4.1.10"
 	},
 	"peerDependencies": {
 		"puppeteer": "^25.3.0",
