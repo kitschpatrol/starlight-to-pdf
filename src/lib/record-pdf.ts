@@ -58,7 +58,7 @@ async function recordPdf({ hostname, options, page }: RecordPdfParams): Promise<
 	const [error] = await errorCatcher(page.pdf(pdfOptions))
 
 	if (error) {
-		throw new ParsingError(`PDF generation failed. Target directory: ${pdfPath}.`, {
+		throw new ParsingError(`PDF generation failed. Target file: ${pdfPath}.`, {
 			originalErrorMessage: error.message,
 		})
 	}

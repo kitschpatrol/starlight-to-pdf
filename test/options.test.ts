@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { ValidationError } from '../src/lib/errors'
 import {
+	normalizePageUrl,
 	parseBaseUrl,
 	parseMargins,
 	resolveExcludeUrls,
@@ -55,6 +56,25 @@ describe('resolveOptions', () => {
 		)
 		expect(() => resolveOptions({ scrollDelay: -5, url: 'https://example.com' })).toThrow(
 			ValidationError,
+		)
+		expect(() => resolveOptions({ timeout: -1, url: 'https://example.com' })).toThrow(
+			ValidationError,
+		)
+	})
+})
+
+describe('normalizePageUrl', () => {
+	it('should add a trailing slash to the pathname', () => {
+		expect(normalizePageUrl(new URL('https://example.com/docs'))).toBe('https://example.com/docs/')
+	})
+
+	it('should keep an existing trailing slash', () => {
+		expect(normalizePageUrl(new URL('https://example.com/docs/'))).toBe('https://example.com/docs/')
+	})
+
+	it('should drop the hash and preserve the query string', () => {
+		expect(normalizePageUrl(new URL('https://example.com/docs?a=1#section'))).toBe(
+			'https://example.com/docs/?a=1',
 		)
 	})
 })
@@ -133,15 +153,20 @@ describe('validateFilename', () => {
 		expect(() => validateFilename('con')).toThrow(ValidationError)
 		expect(() => validateFilename('a<b')).toThrow(ValidationError)
 	})
+
+	it('should reject path separators', () => {
+		expect(() => validateFilename('nested/docs')).toThrow(ValidationError)
+		expect(() => validateFilename(String.raw`nested\docs`)).toThrow(ValidationError)
+	})
 })
 
 describe('validateFileExtension', () => {
 	it('should accept matching extensions', () => {
-		expect(validateFileExtension('cover.html', 'html', 'preceding-html')).toBe('cover.html')
+		expect(validateFileExtension('cover.html', 'html', 'precedingHtml')).toBe('cover.html')
 	})
 
 	it('should reject mismatched extensions', () => {
-		expect(() => validateFileExtension('cover.htm', 'html', 'preceding-html')).toThrow(
+		expect(() => validateFileExtension('cover.htm', 'html', 'precedingHtml')).toThrow(
 			ValidationError,
 		)
 	})
@@ -149,18 +174,14 @@ describe('validateFileExtension', () => {
 
 describe('validateMilliseconds', () => {
 	it('should accept valid values', () => {
-		expect(validateMilliseconds(100, 'scroll-delay', { isNonNegative: true })).toBe(100)
+		expect(validateMilliseconds(100, 'scrollDelay')).toBe(100)
 	})
 
-	it('should reject negative values when non-negative is required', () => {
-		expect(() => validateMilliseconds(-1, 'scroll-delay', { isNonNegative: true })).toThrow(
-			ValidationError,
-		)
+	it('should reject negative values', () => {
+		expect(() => validateMilliseconds(-1, 'scrollDelay')).toThrow(ValidationError)
 	})
 
 	it('should reject NaN', () => {
-		expect(() => validateMilliseconds(NaN, 'timeout', { isNonNegative: false })).toThrow(
-			ValidationError,
-		)
+		expect(() => validateMilliseconds(NaN, 'timeout')).toThrow(ValidationError)
 	})
 })

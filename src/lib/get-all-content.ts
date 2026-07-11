@@ -6,6 +6,7 @@ import { ParsingError } from './errors'
 import getNextUrl from './get-next-url'
 import gotoWithRetry from './goto-with-retry'
 import { log } from './log'
+import { normalizePageUrl } from './options'
 
 type ProcessPageContentReturn = {
 	contents: Contents
@@ -123,11 +124,14 @@ async function getAllContent({
 }: GetAllContentParams): Promise<GetAllContentReturn> {
 	const { exclude, last } = options
 	let accumulatedHtml = htmlContent
+	const visitedUrls = new Set<string>()
 
 	for (;;) {
 		const currentUrl = page.url()
-		const isExcluded = exclude?.has(currentUrl) ?? false
-		const isLastPage = currentUrl === last
+		const normalizedCurrentUrl = normalizePageUrl(new URL(currentUrl))
+		visitedUrls.add(normalizedCurrentUrl)
+		const isExcluded = exclude?.has(normalizedCurrentUrl) ?? false
+		const isLastPage = normalizedCurrentUrl === last
 
 		if (isExcluded) {
 			log.info(`Page excluded: ${currentUrl}`)
@@ -147,6 +151,13 @@ async function getAllContent({
 				log.info(`Parsing finishes: encountered user defined last page: ${currentUrl}`)
 			}
 
+			break
+		}
+
+		// Guards against pagination cycles when following `rel="next"` links; the
+		// predefined URL queue is finite and needs no guard
+		if (!urlQueue && visitedUrls.has(normalizePageUrl(nextUrl))) {
+			log.warn(`Pagination loop detected: ${nextUrl.href} was already parsed. Parsing stops.`)
 			break
 		}
 

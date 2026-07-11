@@ -23,7 +23,7 @@ export const SELECTORS = {
 	topicsList: '.starlight-sidebar-topics',
 } as const
 
-/** Paper formats accepted by the `--format` flag. */
+/** Paper formats accepted by the `format` option. */
 export const PAPER_FORMATS = [
 	'a0',
 	'a1',
@@ -47,7 +47,7 @@ export const SCROLL_DELAY_MS = 100
 /** Default timeout for page actions and the Puppeteer protocol. */
 export const TIMEOUT_MS = 180_000 // 3 minutes
 
-/** Page load lifecycle events accepted by the `--page-wait-until` flag. */
+/** Page load lifecycle events accepted by the `pageWaitUntil` option. */
 export const WAIT_UNTIL_OPTIONS = [
 	'load',
 	'domcontentloaded',

@@ -8,11 +8,10 @@ import { name } from '../../package.json' with { type: 'json' }
 export let log = createLogger(name)
 
 /**
- * Set the logger instance for the module. Export this for library consumers to
- * inject their own logger.
+ * Replaces the logger the library writes its progress output to.
  *
- * @param logger - Accepts either a LogLayer instance or a Console- or
- *   Stream-like log target
+ * @param logger - A LogLayer instance or a Console- or Stream-like log target.
+ *   Call with no arguments to silence library logging entirely.
  */
 export function setLogger(logger?: ILogBasic | ILogLayer<unknown>) {
 	log = injectionHelper(logger)

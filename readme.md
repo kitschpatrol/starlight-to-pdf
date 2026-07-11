@@ -24,7 +24,7 @@
 
 This is a fork of [Linkerin/starlight-to-pdf](https://github.com/Linkerin/starlight-to-pdf) by Alexei Gusev, which adds a few new features and reworks the project structure a bit to address some matters of preference.
 
-Added functionality includes:
+Stylistic and functional changes include:
 
 - Expose a TypeScript API alongside the CLI
 - Automatically detect and correctly crawl sites that use the [starlight-sidebar-topics](https://github.com/HiDeoo/starlight-sidebar-topics) plugin
@@ -32,6 +32,11 @@ Added functionality includes:
 - Add experimental `--dynamic-page-height` flag that lets page content drive the final page height
 - Change `--contents-links` default to `internal`
 - Change `--format` default to `letter`
+- Fix `--exclude` and `--last` matching on sites built without trailing slashes
+- Relax path validation so Windows-style absolute paths are accepted
+- Reject path separators in `--filename` and negative `--timeout` values
+- Stop crawling with a warning if pagination links form a loop
+- Use Node + PNPM instead of Bun
 
 ## Getting started
 
@@ -131,7 +136,7 @@ Resulting PDF file: [spectrum-docs.pdf](./assets/spectrum-docs.pdf)
 Custom styles passed via the `--styles` flag can target classes the tool assigns while assembling the document:
 
 - `.s2pdf-container` - The wrapper around all the website parsed content _(excluding the table of contents)_.
-- `.s2pdf-contents` - The `<ul>` element containing the generated table of contents.
+- `.s2pdf-contents` - The wrapper around the generated table of contents heading and list.
 - `.s2pdf-heading` - The element that contains `<h1>` headings of each page.
 - `.s2pdf-pagebreak` - Each page text content with a defined CSS `break-after: page` property.
 
@@ -185,10 +190,11 @@ Only `url` is required. The options mirror the CLI flags in camelCase and share 
 
 #### Generating a PDF during local development
 
-To generate a PDF file during local development, you can write a short script combining calls to Astro's [programmatic API](https://docs.astro.build/en/reference/programmatic-reference/) combined with the `starlightToPdf` command.
+To generate a PDF file during local development, you can write a short script that combines Astro's [programmatic API](https://docs.astro.build/en/reference/programmatic-reference/) with a call to `starlightToPdf`:
 
 ```ts
 // ./scripts/pdf.ts
+import { starlightToPdf } from '@kitschpatrol/starlight-to-pdf'
 import { build, preview } from 'astro'
 
 // Build Starlight site

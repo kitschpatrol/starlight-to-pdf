@@ -50,9 +50,7 @@ function isKnownFormat(value: string): value is keyof typeof PAPER_WIDTHS_INCHES
 function formatWidthPixels(format: PaperFormat): number {
 	const key = format.toLowerCase()
 	if (!isKnownFormat(key)) {
-		throw new ParsingError(
-			`\`--dynamic-page-height\` doesn't support the '${format}' paper format.`,
-		)
+		throw new ParsingError(`\`dynamicPageHeight\` doesn't support the '${format}' paper format.`)
 	}
 
 	return PAPER_WIDTHS_INCHES[key] * CSS_PIXELS_PER_INCH

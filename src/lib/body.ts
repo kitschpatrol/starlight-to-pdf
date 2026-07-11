@@ -15,7 +15,7 @@ function composeListElement(contentData: Contents[]): string {
 		contentsHtml += `</li>`
 	}
 
-	return `<ul ${CLASSNAMES.contents}>${contentsHtml}</ul>`
+	return `<ul>${contentsHtml}</ul>`
 }
 
 function createContents(contentData: Contents[], options: ResolvedOptions): string {
@@ -79,7 +79,7 @@ export async function composeBody({
 								</style>
 								${precedingHtml}
 								${contents}
-								<div class=${CLASSNAMES.mainContainer}>${htmlContent}</div>
+								<div class="${CLASSNAMES.mainContainer}">${htmlContent}</div>
 								${followingHtml}
 							 `
 

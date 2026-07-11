@@ -1,13 +1,14 @@
 import type { PDFMargin } from 'puppeteer'
-import { sep } from 'node:path'
 import type { PAPER_FORMATS, WAIT_UNTIL_OPTIONS } from './constants'
 import type { ResolvedOptions } from './types'
 import { DEFAULT_MARGINS, SCROLL_DELAY_MS, TIMEOUT_MS } from './constants'
 import { ValidationError } from './errors'
 import { log } from './log'
 
-// Windows-specific characters and reserved names
-const INVALID_PATH_CHARS = /[<>:"\|?*]/v
+// Characters and names that are invalid in filenames on common filesystems,
+// including path separators since the filename must not escape the target
+// directory
+const INVALID_FILENAME_CHARS = /[<>:"\/\\\|?*]/v
 const RESERVED_NAMES = /^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])$/iv
 const HTTP_PROTOCOL_REGEX = /^https?:\/\//v
 const SPACING_REGEX = /^\d+(?:\.\d+)?(?:mm|in|cm|px|pt|pc)?$/v
@@ -184,14 +185,14 @@ export function resolveOptions(options: StarlightToPdfOptions): ResolvedOptions 
 	const cssPageSize = options.cssPageSize ?? defaults.cssPageSize
 	const dynamicPageHeight = options.dynamicPageHeight ?? defaults.dynamicPageHeight
 	if (cssPageSize && dynamicPageHeight) {
-		throw new ValidationError('`dynamic-page-height` cannot be combined with `css-page-size`.')
+		throw new ValidationError('`dynamicPageHeight` cannot be combined with `cssPageSize`.')
 	}
 
 	const margins = options.margins ?? defaults.margins
 
 	return {
 		browserExecutable: mapDefined(options.browserExecutable, (value) =>
-			validatePath(value, 'browser-executable'),
+			validatePath(value, 'browserExecutable'),
 		),
 		browserNoSandbox: options.browserNoSandbox ?? defaults.browserNoSandbox,
 		contents: options.contents ?? defaults.contents,
@@ -202,7 +203,7 @@ export function resolveOptions(options: StarlightToPdfOptions): ResolvedOptions 
 		exclude: mapDefined(options.exclude, (value) => resolveExcludeUrls(value, url.origin)),
 		filename: mapDefined(options.filename, (value) => validateFilename(value)),
 		followingHtml: mapDefined(options.followingHtml, (value) =>
-			validateFileExtension(value, 'html', 'following-html'),
+			validateFileExtension(value, 'html', 'followingHtml'),
 		),
 		footer: mapDefined(options.footer, (value) => validateFileExtension(value, 'html', 'footer')),
 		format: options.format ?? defaults.format,
@@ -214,17 +215,13 @@ export function resolveOptions(options: StarlightToPdfOptions): ResolvedOptions 
 		path: mapDefined(options.path, (value) => validatePath(value, 'path')),
 		pdfOutline: options.pdfOutline ?? defaults.pdfOutline,
 		precedingHtml: mapDefined(options.precedingHtml, (value) =>
-			validateFileExtension(value, 'html', 'preceding-html'),
+			validateFileExtension(value, 'html', 'precedingHtml'),
 		),
 		printBg: options.printBg ?? defaults.printBg,
-		scrollDelay: validateMilliseconds(options.scrollDelay ?? defaults.scrollDelay, 'scroll-delay', {
-			isNonNegative: true,
-		}),
+		scrollDelay: validateMilliseconds(options.scrollDelay ?? defaults.scrollDelay, 'scrollDelay'),
 		starlightPrintCss: options.starlightPrintCss ?? defaults.starlightPrintCss,
 		styles: mapDefined(options.styles, (value) => validateFileExtension(value, 'css', 'styles')),
-		timeout: validateMilliseconds(options.timeout ?? defaults.timeout, 'timeout', {
-			isNonNegative: false,
-		}),
+		timeout: validateMilliseconds(options.timeout ?? defaults.timeout, 'timeout'),
 		url,
 	}
 }
@@ -248,13 +245,29 @@ export function parseBaseUrl(url: string): URL {
 	return new URL(userUrl)
 }
 
+/**
+ * Normalizes a page URL into the canonical form used when comparing `exclude`
+ * and `last` values against crawled page URLs: the hash is dropped and the
+ * pathname gets a trailing slash, so the comparison works for sites built with
+ * and without trailing slashes.
+ */
+export function normalizePageUrl(url: URL): string {
+	const normalized = new URL(url)
+	normalized.hash = ''
+
+	if (!normalized.pathname.endsWith('/')) {
+		normalized.pathname += '/'
+	}
+
+	return normalized.href
+}
+
 function resolvePageUrl(value: string, origin: string): string {
 	if (!URL.canParse(value, origin)) {
 		throw new ValidationError(`Invalid URL path provided: '${value}'.`)
 	}
 
-	const url = new URL(value, origin)
-	return url.href.endsWith('/') ? url.href : `${url.href}/`
+	return normalizePageUrl(new URL(value, origin))
 }
 
 /**
@@ -286,15 +299,15 @@ export function resolveLastUrl(value: string, origin: string): string {
  * Validates a four-value spacing string (e.g. `'1cm 1cm 1cm 1.5cm'`) as used by
  * the `margins` and `paddings` options. Returns the value unchanged.
  */
-export function validateSpacing(value: string, flag: string): string {
+export function validateSpacing(value: string, optionName: string): string {
 	const parts = value.split(' ')
 	if (parts.length !== 4) {
-		throw new ValidationError(`For \`--${flag}\` argument must be four values separated by spaces.`)
+		throw new ValidationError(`The \`${optionName}\` option requires four space-separated values.`)
 	}
 
 	for (const part of parts) {
 		if (!SPACING_REGEX.test(part)) {
-			throw new ValidationError(`Invalid \`--${flag}\` value provided: '${part}'.`)
+			throw new ValidationError(`Invalid \`${optionName}\` value provided: '${part}'.`)
 		}
 	}
 
@@ -316,34 +329,28 @@ export function parseMargins(value: string): PDFMargin {
  */
 export function validateFilename(name: string): string {
 	if (name.trim() === '') {
-		throw new ValidationError('`--filename` argument value must be a non-empty string.')
+		throw new ValidationError('The `filename` option must be a non-empty string.')
 	}
 
-	if (INVALID_PATH_CHARS.test(name) || RESERVED_NAMES.test(name)) {
-		throw new ValidationError(`Invalid \`--filename\` value. Provided: '${name}'`)
+	if (INVALID_FILENAME_CHARS.test(name) || RESERVED_NAMES.test(name)) {
+		throw new ValidationError(`Invalid \`filename\` value. Provided: '${name}'`)
 	}
 
 	return name
 }
 
 /**
- * Validates a path-like option value against characters and names that are
- * invalid on common filesystems. Returns the value unchanged.
+ * Validates a path-like option value, rejecting empty strings and null bytes.
+ * Problems like missing files or permissions surface later as `ParsingError`s
+ * when the path is used. Returns the value unchanged.
  */
-function validatePath(value: string, flag: string): string {
+function validatePath(value: string, optionName: string): string {
 	if (value.trim() === '') {
-		throw new ValidationError(`\`--${flag}\` argument value must be a non-empty string.`)
+		throw new ValidationError(`The \`${optionName}\` option must be a non-empty string.`)
 	}
 
-	for (const part of value.split(sep)) {
-		if (INVALID_PATH_CHARS.test(part) || RESERVED_NAMES.test(part)) {
-			throw new ValidationError(`\`--${flag}\` value contains invalid part: ${part}`)
-		}
-	}
-
-	// Ensures the path doesn't have null bytes
 	if (value.includes('\0')) {
-		throw new ValidationError(`\`--${flag}\` value contains null byte.`)
+		throw new ValidationError(`The \`${optionName}\` option contains a null byte.`)
 	}
 
 	return value
@@ -353,12 +360,16 @@ function validatePath(value: string, flag: string): string {
  * Validates that a path-like option value points to a file with the expected
  * extension. Returns the value unchanged.
  */
-export function validateFileExtension(value: string, extension: string, flag: string): string {
-	validatePath(value, flag)
+export function validateFileExtension(
+	value: string,
+	extension: string,
+	optionName: string,
+): string {
+	validatePath(value, optionName)
 
 	if (value.split('.').at(-1) !== extension) {
 		throw new ValidationError(
-			`Invalid file provided: '${value}'. Expected \`*.${extension}\` file.`,
+			`Invalid \`${optionName}\` file provided: '${value}'. Expected \`*.${extension}\` file.`,
 		)
 	}
 
@@ -366,17 +377,13 @@ export function validateFileExtension(value: string, extension: string, flag: st
 }
 
 /**
- * Validates a millisecond option value, optionally requiring it to be
- * non-negative. Returns the value unchanged.
+ * Validates a millisecond option value, requiring a non-negative number.
+ * Returns the value unchanged.
  */
-export function validateMilliseconds(
-	value: number,
-	flag: string,
-	{ isNonNegative }: { isNonNegative: boolean },
-): number {
-	if (Number.isNaN(value) || (isNonNegative && value < 0)) {
+export function validateMilliseconds(value: number, optionName: string): number {
+	if (Number.isNaN(value) || value < 0) {
 		throw new ValidationError(
-			`Invalid \`--${flag}\` value provided. It must be a ${isNonNegative ? 'non-negative ' : ''}number of milliseconds.`,
+			`Invalid \`${optionName}\` value provided. It must be a non-negative number of milliseconds.`,
 		)
 	}
 
