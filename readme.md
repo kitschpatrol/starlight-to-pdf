@@ -49,16 +49,22 @@ Stylistic and functional changes include:
 
 ### Installation
 
-Install globally:
+Install the CLI tool globally via Homebrew:
 
 ```sh
-npm install --global @kitschpatrol/starlight-to-pdf
+brew install kitschpatrol/tap/starlight-to-pdf
 ```
 
-Or run it directly without installing:
+Or, run it directly without installing:
 
 ```sh
 npx @kitschpatrol/starlight-to-pdf https://starlight.astro.build
+```
+
+Or, install locally to access the CLI commands in a single project or to import the provided TypeScript library APIs:
+
+```sh
+npm install @kitschpatrol/starlight-to-pdf
 ```
 
 ## Usage

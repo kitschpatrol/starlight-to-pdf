@@ -48,3 +48,4 @@ minimumReleaseAgeExclude:
   - eslint-plugin-react-web-api@5.20.5
   - eslint-plugin-react-x@5.20.5
   - lognow@0.8.4
+  - brewpub@0.3.0
