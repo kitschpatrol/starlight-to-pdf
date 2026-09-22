@@ -19,11 +19,9 @@ async function getNextUrl(page: Page): Promise<undefined | URL> {
 
 	const currentUrl = new URL(page.url())
 
-	if (nextLink !== undefined && URL.canParse(nextLink, currentUrl.origin)) {
-		return new URL(nextLink, currentUrl.origin)
-	}
-
-	return undefined
+	return nextLink !== undefined && URL.canParse(nextLink, currentUrl.origin)
+		? new URL(nextLink, currentUrl.origin)
+		: undefined
 }
 
 export default getNextUrl

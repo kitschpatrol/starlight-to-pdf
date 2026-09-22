@@ -42,11 +42,7 @@ async function getStartingUrl(
 	visitedLinks.add(url.href)
 
 	for (const link of links) {
-		if (link === '' || visitedLinks.has(link)) {
-			continue
-		}
-
-		if (!URL.canParse(link, url.origin)) {
+		if (link === '' || visitedLinks.has(link) || !URL.canParse(link, url.origin)) {
 			continue
 		}
 

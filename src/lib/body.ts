@@ -100,5 +100,5 @@ export function injectBody(result: string, noPrintCss: boolean, selector: string
 		}
 	}
 
-	return body.innerHTML
+	return body.getHTML()
 }

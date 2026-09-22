@@ -6,8 +6,8 @@
 
 <!-- badges -->
 
-[![NPM Package @kitschpatrol/starlight-to-pdf](https://img.shields.io/npm/v/@kitschpatrol/starlight-to-pdf.svg)](https://npmjs.com/package/@kitschpatrol/starlight-to-pdf)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/license/mit/)
+[![NPM Package @kitschpatrol/starlight-to-pdf](https://img.shields.io/npm/v/@kitschpatrol/starlight-to-pdf.svg)](https://www.npmjs.com/package/@kitschpatrol/starlight-to-pdf)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/license/mit)
 [![CI](https://github.com/kitschpatrol/starlight-to-pdf/actions/workflows/ci.yml/badge.svg)](https://github.com/kitschpatrol/starlight-to-pdf/actions/workflows/ci.yml)
 
 <!-- /badges -->
@@ -36,6 +36,7 @@ Stylistic and functional changes include:
 - Relax path validation so Windows-style absolute paths are accepted
 - Reject path separators in `--filename` and negative `--timeout` values
 - Stop crawling with a warning if pagination links form a loop
+- Drop the `--url` and `-u` argument flags in favor of a strict positional
 - Use Node + PNPM instead of Bun
 
 ## Getting started

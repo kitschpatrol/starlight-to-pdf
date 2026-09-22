@@ -104,13 +104,15 @@ function measureAndNameUnits(
 		element.style.setProperty('page', `${pageNamePrefix}${unitIndex}`)
 		hasOpenUnit = true
 
-		if (element.classList.contains(pageBreakClass)) {
-			const bottom = element.getBoundingClientRect().bottom + window.scrollY
-			heights.push(bottom - previousBottom)
-			previousBottom = bottom
-			unitIndex += 1
-			hasOpenUnit = false
+		if (!element.classList.contains(pageBreakClass)) {
+			continue
 		}
+
+		const bottom = element.getBoundingClientRect().bottom + window.scrollY
+		heights.push(bottom - previousBottom)
+		previousBottom = bottom
+		unitIndex += 1
+		hasOpenUnit = false
 	}
 
 	if (hasOpenUnit) {

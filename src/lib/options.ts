@@ -319,7 +319,7 @@ export function validateSpacing(value: string, optionName: string): string {
  */
 export function parseMargins(value: string): PDFMargin {
 	validateSpacing(value, 'margins')
-	const [top = '0', right = '0', bottom = '0', left = '0'] = value.split(' ')
+	const [top = '0', right = '0', bottom = '0', left = '0'] = value.split(' ', 4)
 	return { bottom, left, right, top }
 }
 

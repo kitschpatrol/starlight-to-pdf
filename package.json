@@ -49,36 +49,36 @@
 	],
 	"scripts": {
 		"build": "tsdown",
-		"clean": "shx rm -f pnpm-lock.yaml && git clean -fdX -e !.claude/",
+		"clean-deep": "shx rm -f pnpm-lock.yaml && git clean -fdX -e !.claude/",
 		"fix": "ksc fix",
 		"lint": "ksc lint",
-		"release": "bumpp --commit 'Release: %s' && pnpm build && NPM_AUTH_TOKEN=$(op read 'op://Personal/npm/token') && pnpm publish",
+		"release": "bumpp --commit 'Release: %s' && pnpm build && NPM_TOKEN=$(op read 'op://Personal/npm/token') && pnpm publish",
 		"test": "vitest run"
 	},
 	"dependencies": {
-		"lognow": "^0.6.2",
-		"yargs": "^18.0.0"
+		"lognow": "^0.8.4",
+		"yargs": "^18.2.0"
 	},
 	"devDependencies": {
 		"@arethetypeswrong/core": "^0.18.5",
-		"@kitschpatrol/shared-config": "^8.1.0",
-		"@types/node": "~24.13.3",
+		"@kitschpatrol/shared-config": "^8.10.0",
+		"@types/node": "~24.13.4",
 		"@types/yargs": "^17.0.35",
-		"bumpp": "^11.1.0",
-		"mdat-plugin-cli-help": "^3.0.2",
-		"publint": "^0.3.21",
-		"puppeteer": "^25.3.0",
+		"bumpp": "^12.3.0",
+		"mdat-plugin-cli-help": "^3.2.0",
+		"publint": "^0.3.24",
+		"puppeteer": "^25.11.0",
 		"puppeteer-autoscroll-down": "^2.0.1",
 		"shx": "^0.4.0",
-		"tsdown": "^0.22.4",
+		"tsdown": "^0.23.0",
 		"typescript": "~6.0.3",
-		"vitest": "^4.1.10"
+		"vitest": "^5.0.1"
 	},
 	"peerDependencies": {
 		"puppeteer": "^25.3.0",
 		"puppeteer-autoscroll-down": "^2.0.1"
 	},
-	"packageManager": "pnpm@11.11.0",
+	"packageManager": "pnpm@12.4.1",
 	"engines": {
 		"node": ">=24.16.0"
 	},
