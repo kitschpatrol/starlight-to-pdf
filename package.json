@@ -1,6 +1,6 @@
 {
 	"name": "@kitschpatrol/starlight-to-pdf",
-	"version": "2.0.0-beta.2",
+	"version": "2.0.0-beta.3",
 	"description": "CLI tool and TypeScript library to convert Starlight documentation websites into PDF files.",
 	"keywords": [
 		"starlight",
