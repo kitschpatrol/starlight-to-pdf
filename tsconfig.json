@@ -1,8 +1,6 @@
 {
 	"extends": "@kitschpatrol/typescript-config",
 	"compilerOptions": {
-		"types": ["node", "yargs"]
-	},
-	"include": ["**/**.*"],
-	"exclude": ["dist/"]
+		"types": ["node"]
+	}
 }

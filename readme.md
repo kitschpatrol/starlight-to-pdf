@@ -9,12 +9,13 @@
 [![NPM Package @kitschpatrol/starlight-to-pdf](https://img.shields.io/npm/v/@kitschpatrol/starlight-to-pdf.svg)](https://www.npmjs.com/package/@kitschpatrol/starlight-to-pdf)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/license/mit)
 [![CI](https://github.com/kitschpatrol/starlight-to-pdf/actions/workflows/ci.yml/badge.svg)](https://github.com/kitschpatrol/starlight-to-pdf/actions/workflows/ci.yml)
+[![Homebrew](https://img.shields.io/badge/Homebrew-kitschpatrol%2Ftap%2Fstarlight--to--pdf-FBB040?logo=homebrew&logoColor=white)](https://github.com/kitschpatrol/homebrew-tap/blob/HEAD/Formula/starlight-to-pdf.rb)
 
 <!-- /badges -->
 
 <!-- short-description -->
 
-**A CLI tool and TypeScript library to convert Starlight documentation websites into PDF files.**
+**CLI tool and TypeScript library to convert Starlight documentation websites into PDF files.**
 
 <!-- /short-description -->
 
@@ -41,30 +42,50 @@ Stylistic and functional changes include:
 
 ## Getting started
 
+<!-- dependencies -->
+
 ### Dependencies
 
-- [Node.js](https://nodejs.org) 24.16 or newer.
-- Chrome or Chromium. [Puppeteer](https://pptr.dev), installed alongside the tool, downloads a compatible Chrome for Testing build by default. To use an existing browser instead, pass its path via the `--browser-executable` flag.
-- An Astro Starlight project served either locally or remotely that you want to PDF-ify.
+- [Node.js](https://nodejs.org/) 24.16.0 or newer (specifically `^24.16.0 || >=26.3.0`)
+- [puppeteer](https://www.npmjs.com/package/puppeteer) `^25.3.0` _(peer dependency)_
+- [puppeteer-autoscroll-down](https://www.npmjs.com/package/puppeteer-autoscroll-down) `^2.0.1` _(peer dependency)_
+
+<!-- /dependencies -->
+
+The tool also needs Chrome or Chromium. [Puppeteer](https://pptr.dev) downloads a compatible Chrome for Testing build by default. To use an existing browser instead, pass its path via the `--browser-executable` flag.
+
+And, of course, you'll need an Astro Starlight project served either locally or remotely that you want to PDF-ify.
 
 ### Installation
 
-Install the CLI tool globally via Homebrew:
+Pick the option that matches how you plan to use it.
 
-```sh
-brew install kitschpatrol/tap/starlight-to-pdf
-```
+#### CLI
 
-Or, run it directly without installing:
+Run it once without installing:
 
 ```sh
 npx @kitschpatrol/starlight-to-pdf https://starlight.astro.build
 ```
 
-Or, install locally to access the CLI commands in a single project or to import the provided TypeScript library APIs:
+Or install it globally with Homebrew:
 
 ```sh
-npm install @kitschpatrol/starlight-to-pdf
+brew install kitschpatrol/tap/starlight-to-pdf
+```
+
+Or install it globally with npm:
+
+```sh
+npm install --global @kitschpatrol/starlight-to-pdf
+```
+
+#### Library
+
+Add it to your project, along with the `puppeteer` and `puppeteer-autoscroll-down` peer dependencies, to import the TypeScript API. This also puts the `starlight-to-pdf` CLI on your project's path:
+
+```sh
+npm install @kitschpatrol/starlight-to-pdf puppeteer puppeteer-autoscroll-down
 ```
 
 ## Usage
@@ -79,7 +100,7 @@ The resulting PDF is saved to the current working directory, named after the sit
 
 ### CLI
 
-<!-- cli-help -->
+<!-- cli-help({ heading: false, headingLevel: 3 }) -->
 
 #### Command: `starlight-to-pdf`
 
@@ -170,15 +191,11 @@ You may also check [the resulting PDF file](./assets/spectrum-docs.pdf).
 
 ### Library
 
-The package also exports its functionality as a TypeScript API. Install it locally, along with the `puppeteer` and `puppeteer-autoscroll-down` peer dependencies:
-
-```sh
-npm install @kitschpatrol/starlight-to-pdf puppeteer puppeteer-autoscroll-down
-```
+The package also exports its functionality as a TypeScript API.
 
 #### API
 
-Then call `starlightToPdf`:
+Call `starlightToPdf`:
 
 ```ts
 import { starlightToPdf } from '@kitschpatrol/starlight-to-pdf'
@@ -252,7 +269,7 @@ setLogger()
 
 - The crawler loads the given URL and searches for the first page with a pagination link or a topics navigation, then either follows the `rel="next"` chain (plain Starlight sites) or visits each topic and collects the links of its sidebar in order (starlight-sidebar-topics sites).
 - Topic entries that link to other domains are skipped, and all flags work as usual.
-- Relative to upstream, this fork migrates the runtime from [Bun](https://bun.sh) to [Node.js](https://nodejs.org) (24 or newer), the CLI to [yargs](https://yargs.js.org), logging to [lognow](https://github.com/kitschpatrol/lognow), bundling to [tsdown](https://tsdown.dev), and linting and formatting to [@kitschpatrol/shared-config](https://github.com/kitschpatrol/shared-config). It also drops the progress spinner in favor of plain log output, as suggested in [Linkerin/starlight-to-pdf#13](https://github.com/Linkerin/starlight-to-pdf/issues/13).
+- Relative to upstream, this fork migrates the runtime from [Bun](https://bun.sh) to [Node.js](https://nodejs.org), the CLI to [yargs](https://yargs.js.org), logging to [lognow](https://github.com/kitschpatrol/lognow), bundling to [tsdown](https://tsdown.dev), and linting and formatting to [@kitschpatrol/shared-config](https://github.com/kitschpatrol/shared-config). It also drops the progress spinner in favor of plain log output, as suggested in [Linkerin/starlight-to-pdf#13](https://github.com/Linkerin/starlight-to-pdf/issues/13).
 - The original author wrote about the design of the tool in [Transforming Starlight into PDF: experience and insights](https://dev.to/linkerin/transforming-starlight-into-pdf-experience-and-insights-j1d).
 
 ### Similar projects

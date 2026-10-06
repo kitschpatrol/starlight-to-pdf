@@ -39,8 +39,7 @@ async function parsePage({ internalLinks, page }: ParsePageParams): Promise<Pars
 	const evaluatePage = async (link: string, isInternal: boolean) =>
 		page.evaluate(
 			(linkArg, selectors, classnames, isInternalArg) => {
-				const currentUrl = new URL(linkArg)
-				const { pathname } = currentUrl
+				const { pathname } = new URL(linkArg)
 
 				const heading = document.querySelector<HTMLElement>(selectors.heading)
 				heading?.classList.add(classnames.heading)

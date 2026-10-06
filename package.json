@@ -1,7 +1,7 @@
 {
 	"name": "@kitschpatrol/starlight-to-pdf",
 	"version": "2.0.0-beta.2",
-	"description": "A CLI tool and TypeScript library to convert Starlight documentation websites into PDF files.",
+	"description": "CLI tool and TypeScript library to convert Starlight documentation websites into PDF files.",
 	"keywords": [
 		"starlight",
 		"pdf",
@@ -52,6 +52,7 @@
 		"clean-deep": "shx rm -f pnpm-lock.yaml && git clean -fdX -e !.claude/",
 		"fix": "ksc fix",
 		"lint": "ksc lint",
+		"prepare": "skills experimental_sync -y -f",
 		"release": "bumpp --commit 'Release: %s' && pnpm build && pnpm publish --otp $(op item get npm --otp) && brewpub --tap kitschpatrol/tap",
 		"test": "vitest run"
 	},
@@ -61,27 +62,28 @@
 	},
 	"devDependencies": {
 		"@arethetypeswrong/core": "^0.18.5",
-		"@kitschpatrol/shared-config": "^8.10.0",
+		"@kitschpatrol/shared-config": "^8.12.1",
 		"@types/node": "~24.13.4",
 		"@types/yargs": "^17.0.35",
-		"brewpub": "^0.3.0",
+		"brewpub": "^0.5.0",
 		"bumpp": "^12.3.0",
-		"mdat-plugin-cli-help": "^3.2.0",
-		"publint": "^0.3.24",
-		"puppeteer": "^25.11.0",
+		"mdat-plugin-cli-help": "^3.4.0",
+		"publint": "^0.3.25",
+		"puppeteer": "^25.12.0",
 		"puppeteer-autoscroll-down": "^2.0.1",
 		"shx": "^0.4.0",
+		"skills": "^1.7.0",
 		"tsdown": "^0.23.0",
 		"typescript": "~6.0.3",
-		"vitest": "^5.0.1"
+		"vitest": "^5.0.3"
 	},
 	"peerDependencies": {
 		"puppeteer": "^25.3.0",
 		"puppeteer-autoscroll-down": "^2.0.1"
 	},
-	"packageManager": "pnpm@12.4.1",
+	"packageManager": "pnpm@12.9.1",
 	"engines": {
-		"node": ">=24.16.0"
+		"node": "^24.16.0 || >=26.3.0"
 	},
 	"publishConfig": {
 		"access": "public"
