@@ -57,7 +57,7 @@
 		"test": "vitest run"
 	},
 	"dependencies": {
-		"lognow": "^0.8.5",
+		"lognow": "^0.8.7",
 		"yargs": "^18.2.0"
 	},
 	"devDependencies": {
@@ -69,18 +69,18 @@
 		"bumpp": "^12.3.0",
 		"mdat-plugin-cli-help": "^3.4.1",
 		"publint": "^0.3.25",
-		"puppeteer": "^25.13.0",
+		"puppeteer": "^25.16.0",
 		"puppeteer-autoscroll-down": "^2.0.1",
 		"shx": "^0.4.0",
-		"tsdown": "^0.23.1",
+		"tsdown": "^0.23.4",
 		"typescript": "~6.0.3",
-		"vitest": "^5.0.3"
+		"vitest": "^5.0.5"
 	},
 	"peerDependencies": {
 		"puppeteer": "^25.3.0",
 		"puppeteer-autoscroll-down": "^2.0.1"
 	},
-	"packageManager": "pnpm@12.15.0",
+	"packageManager": "pnpm@12.16.1",
 	"engines": {
 		"node": "^24.16.0 || >=26.3.0"
 	},
