@@ -1,5 +1,6 @@
 import { cspellConfig } from '@kitschpatrol/cspell-config'
 
 export default cspellConfig({
-	words: ['Linkerin', 'pagebreak', 'percollate', 'setuid'],
+	ignorePaths: ['**/changelog.md'],
+	words: ['chagent', 'Linkerin', 'pagebreak', 'percollate', 'setuid'],
 })
