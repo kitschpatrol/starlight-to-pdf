@@ -247,7 +247,7 @@ export async function composeBody({
 									/* Up to two columns, as many as fit at a comfortable width */
 									.${CLASSNAMES.contents} > ul {
 										columns: 2 18em;
-										column-gap: 2rem;
+										column-gap: 4rem;
 									}
 
 									/* Keeps each page entry with its sections in one column */
