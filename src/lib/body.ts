@@ -182,6 +182,11 @@ export async function composeBody({
 										anchor-name: --s2pdf-video;
 									}
 
+									/* The spacing rules of Starlight skip links, so the content after the link of the media gets the gap it would have had */
+									.${CLASSNAMES.starlight.markdownContent} .${CLASSNAMES.media}:not(:where(.not-content *)) {
+										margin-bottom: var(--sl-content-gap-y, 1rem);
+									}
+
 									/* Centered on the video, which can be narrower than the link around it */
 									.${CLASSNAMES.mediaBadge} {
 										position: absolute;
