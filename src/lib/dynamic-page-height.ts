@@ -50,9 +50,12 @@ function measureAndNameUnits(
 			continue
 		}
 
-		const bottom = element.getBoundingClientRect().bottom + window.scrollY
-		heights.push(bottom - previousBottom)
-		previousBottom = bottom
+		const { bottom, top } = element.getBoundingClientRect()
+		// Descendants can extend past the element's box, for example a grid with
+		// a negative bottom margin, and print on a page of their own otherwise
+		const overflowBottom = Math.max(bottom, top + element.scrollHeight)
+		heights.push(overflowBottom + window.scrollY - previousBottom)
+		previousBottom = bottom + window.scrollY
 		unitIndex += 1
 		hasOpenUnit = false
 	}
