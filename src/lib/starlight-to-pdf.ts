@@ -11,6 +11,7 @@ import fitTablesToPage from './fit-tables'
 import getAllContent from './get-all-content'
 import getStartingUrl from './get-starting-url'
 import gotoWithRetry from './goto-with-retry'
+import keepGridItemsWhole from './keep-grid-items-whole'
 import { log } from './log'
 import { resolveOptions } from './options'
 import recordPdf from './record-pdf'
@@ -123,6 +124,8 @@ export async function starlightToPdf(
 			delay: resolved.scrollDelay,
 			size: 1100,
 		})
+
+		await keepGridItemsWhole(page)
 
 		// Content can't be fitted to a page size set in CSS, which is unknown
 		if (!resolved.cssPageSize) {
