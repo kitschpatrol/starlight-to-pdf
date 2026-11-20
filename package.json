@@ -51,9 +51,11 @@
 	"scripts": {
 		"build": "tsdown",
 		"clean-deep": "shx rm -f pnpm-lock.yaml && git clean -fdX",
+		"example": "pnpm build && node ./dist/bin/cli.js spectrum.snipshot.dev -p ./assets --filename spectrum-docs --contents-name 'Table of contents' --exclude '/demo /contacts' --cover --subtitle 'Library documentation' --header --footer --notice 'Spectrum is released under the MIT License.' --print-bg",
 		"fix": "pnpm build && ksc fix",
 		"lint": "pnpm build && ksc lint",
-		"release": "bumpp --commit 'Release: %s' --all --execute 'chagent' && pnpm build && pnpm publish --otp $(op item get npm --otp) && brewpub --tap kitschpatrol/tap",
+		"release": "bumpp --commit 'Release: %s' --all --execute 'pnpm run release:files' && pnpm build && pnpm publish --otp $(op item get npm --otp) && brewpub --tap kitschpatrol/tap",
+		"release:files": "chagent && pnpm run example",
 		"test": "vitest run"
 	},
 	"dependencies": {
