@@ -308,9 +308,9 @@ Thanks to [Zach Hall](https://github.com/zshall) for the `--browser-no-sandbox` 
 
 [Issues](https://github.com/kitschpatrol/starlight-to-pdf/issues) are welcome and appreciated.
 
-Please open an issue to discuss changes before submitting a pull request. Unsolicited PRs (especially AI-generated ones) are unlikely to be merged.
+Please open an issue to discuss changes before submitting a pull request. Unsolicited PRs are unlikely to be merged.
 
-This repository uses [@kitschpatrol/shared-config](https://github.com/kitschpatrol/shared-config) (via its `ksc` CLI) for linting and formatting, plus [MDAT](https://github.com/kitschpatrol/mdat) for readme placeholder expansion.
+This repository uses [ksc](https://github.com/kitschpatrol/shared-config) to handle linting and formatting with the usual tools, plus [mdat](https://github.com/kitschpatrol/mdat) for readme placeholder expansion, and [chagent](https://github.com/kitschpatrol/chagent) to maintain the [changelog](changelog.md).
 
 <!-- /contributing -->
 
