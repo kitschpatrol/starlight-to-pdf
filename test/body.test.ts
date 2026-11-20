@@ -184,4 +184,29 @@ describe('injectBody', () => {
 		})
 		expect(await page.$eval('#host', (host) => host.shadowRoot?.textContent)).toBe('Shadow')
 	})
+
+	it('should set the size of the text and let page titles span the page', async () => {
+		const page = await openStartPage()
+		const body = await composeBody({
+			baseOrigin: origin,
+			contentsData: new Set(),
+			document: { date: '', title: 'Docs' },
+			// Starlight's narrow content width and its page title container
+			htmlContent: `
+				<style>:root { --sl-content-width: 10rem; } .sl-container { max-width: var(--sl-content-width); }</style>
+				<div class="sl-container s2pdf-heading"><h1>Title</h1></div>
+				<div class="sl-markdown-content"><p>Text</p></div>`,
+			options: resolveOptions({ contents: false, fontSize: '9pt', url: origin }),
+		})
+		await inject(page, { body })
+
+		const layout = await page.evaluate(() => ({
+			containerWidth: document.querySelector('.s2pdf-container')?.getBoundingClientRect().width,
+			fontSize: getComputedStyle(document.querySelector('.sl-markdown-content p') ?? document.body)
+				.fontSize,
+			titleWidth: document.querySelector('.s2pdf-heading')?.getBoundingClientRect().width,
+		}))
+		expect(layout.fontSize).toBe('12px')
+		expect(layout.titleWidth).toBe(layout.containerWidth)
+	})
 })

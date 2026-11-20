@@ -28,6 +28,7 @@ export type ResolvedOptions = {
 	exclude: Set<string> | undefined
 	filename: string | undefined
 	followingHtml: string | undefined
+	fontSize: string
 	footer: boolean
 	format: (typeof PAPER_FORMATS)[number]
 	header: boolean
