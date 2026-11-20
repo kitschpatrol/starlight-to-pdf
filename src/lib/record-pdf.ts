@@ -4,7 +4,6 @@ import path from 'node:path'
 import type { ResolvedOptions } from './types'
 import errorCatcher from './error-catcher'
 import { ParsingError } from './errors'
-import getFileContent from './get-file-content'
 import { log } from './log'
 
 type RecordPdfParams = {
@@ -37,7 +36,6 @@ async function recordPdf({ hostname, options, page }: RecordPdfParams): Promise<
 	}
 
 	const pdfOptions: PDFOptions = {
-		displayHeaderFooter: options.header !== undefined || options.footer !== undefined,
 		format: options.format,
 		margin: options.margins,
 		outline: options.pdfOutline,
@@ -45,14 +43,6 @@ async function recordPdf({ hostname, options, page }: RecordPdfParams): Promise<
 		preferCSSPageSize: options.cssPageSize || options.dynamicPageHeight,
 		printBackground: options.printBg,
 		timeout: options.timeout,
-	}
-
-	if (options.header !== undefined) {
-		pdfOptions.headerTemplate = await getFileContent(options.header)
-	}
-
-	if (options.footer !== undefined) {
-		pdfOptions.footerTemplate = await getFileContent(options.footer)
 	}
 
 	const [error] = await errorCatcher(page.pdf(pdfOptions))

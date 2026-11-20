@@ -47,6 +47,15 @@ await yargsInstance
 					describe: 'The URL of the Starlight powered documentation website to convert to PDF.',
 					type: 'string',
 				})
+				.option('about', {
+					describe:
+						'Adds a back page with this text, such as a description of the project. Blank lines separate paragraphs.',
+					type: 'string',
+				})
+				.option('author', {
+					describe: 'Author shown on the cover page, such as a person or an organization.',
+					type: 'string',
+				})
 				.option('browser-executable', {
 					describe:
 						'Specifies a path to a browser executable to use instead of the default one (e.g. --browser-executable /usr/bin/chromium-browser).',
@@ -57,6 +66,11 @@ await yargsInstance
 					describe:
 						'Adds the `--no-sandbox` and `--disable-setuid-sandbox` flags when launching the browser. Useful when running in environments where sandboxing is not available (e.g., certain CI/CD pipelines or Docker containers).',
 					type: 'boolean',
+				})
+				.option('contact', {
+					describe:
+						'Adds a back page with these contact details. Blank lines separate paragraphs, and line breaks are kept.',
+					type: 'string',
 				})
 				.option('contents', {
 					default: defaults.contents,
@@ -73,11 +87,21 @@ await yargsInstance
 					describe: 'Customizes the generated table of contents name in the PDF.',
 					type: 'string',
 				})
+				.option('cover', {
+					default: defaults.cover,
+					describe: 'Adds a cover page with the title, subtitle, author, revision, and date.',
+					type: 'boolean',
+				})
 				.option('css-page-size', {
 					default: defaults.cssPageSize,
 					describe:
 						"Allows setting the PDF page size using CSS `@page`. If the predefined sizes in the '--format' option don't meet your needs, enable this option and specify the desired page size in custom CSS provided via the '--styles' flag (e.g., `@page { size: 8.5in 14in; }`).",
 					type: 'boolean',
+				})
+				.option('date', {
+					describe:
+						"Date shown on the cover and back pages and in the footer. Defaults to today's date, formatted for the language of the site. Pass an empty string to leave it out.",
+					type: 'string',
 				})
 				.option('dynamic-page-height', {
 					default: defaults.dynamicPageHeight,
@@ -103,9 +127,10 @@ await yargsInstance
 					type: 'string',
 				})
 				.option('footer', {
+					default: defaults.footer,
 					describe:
-						"Path to the HTML file for the PDF print footer. For more details, check the PDF header and footer section in the readme and Puppeteer's PDFOptions.",
-					type: 'string',
+						'Adds a footer with the title, date, and page numbers to every page except the cover and back pages. Needs bottom margins to print in.',
+					type: 'boolean',
 				})
 				.option('format', {
 					choices: PAPER_FORMATS,
@@ -114,9 +139,10 @@ await yargsInstance
 						"The paper format for the PDF file. Refer to Puppeteer's paper formats for more details.",
 				})
 				.option('header', {
+					default: defaults.header,
 					describe:
-						"Path to the HTML file for the PDF print header. For more details, check the PDF header and footer section in the readme and Puppeteer's PDFOptions.",
-					type: 'string',
+						'Adds a header with the title of the current docs page to every page except the cover and back pages. Needs top margins to print in.',
+					type: 'boolean',
 				})
 				.option('last', {
 					alias: 'l',
@@ -128,6 +154,11 @@ await yargsInstance
 					default: defaults.margins,
 					describe:
 						'Sets margins for the PDF file. Provide a string with 4 values separated by space, reflecting the top, right, bottom and left margins respectively.',
+					type: 'string',
+				})
+				.option('notice', {
+					describe:
+						'Adds a back page with this notice, such as a confidentiality or copyright notice. Blank lines separate paragraphs.',
 					type: 'string',
 				})
 				.option('paddings', {
@@ -163,6 +194,10 @@ await yargsInstance
 						"Enables printing of background graphics. It's a `printBackground` property in Puppeteer's PDFOptions.",
 					type: 'boolean',
 				})
+				.option('revision', {
+					describe: "Revision shown on the cover and back pages, such as 'Version 1.2.0'.",
+					type: 'string',
+				})
 				.option('scroll-delay', {
 					default: defaults.scrollDelay,
 					describe:
@@ -180,11 +215,20 @@ await yargsInstance
 						'Path to a CSS file for custom PDF styles. The styles are injected into the `<style>` tag inside the `<body>` element. Also check the readme for a list of special CSS classes used by the tool.',
 					type: 'string',
 				})
+				.option('subtitle', {
+					describe: 'Subtitle shown on the cover page.',
+					type: 'string',
+				})
 				.option('timeout', {
 					default: defaults.timeout,
 					describe:
 						'Timeout for both the page actions and `protocolTimeout` in milliseconds. You may need to increase this value for parsing large websites.',
 					type: 'number',
+				})
+				.option('title', {
+					describe:
+						'Title of the document, shown on the cover and back pages and in the footer, and stored as the PDF title. Defaults to the title of the site.',
+					type: 'string',
 				})
 				.option('verbose', {
 					default: false,
@@ -199,12 +243,17 @@ await yargsInstance
 				}
 
 				await starlightToPdf({
+					about: argv.about,
+					author: argv.author,
 					browserExecutable: argv.browserExecutable,
 					browserNoSandbox: argv.browserNoSandbox,
+					contact: argv.contact,
 					contents: argv.contents,
 					contentsLinks: argv.contentsLinks,
 					contentsName: argv.contentsName,
+					cover: argv.cover,
 					cssPageSize: argv.cssPageSize,
+					date: argv.date,
 					dynamicPageHeight: argv.dynamicPageHeight,
 					exclude: argv.exclude,
 					filename: argv.filename,
@@ -214,16 +263,20 @@ await yargsInstance
 					header: argv.header,
 					last: argv.last,
 					margins: argv.margins,
+					notice: argv.notice,
 					paddings: argv.paddings,
 					pageWaitUntil: argv.pageWaitUntil,
 					path: argv.path,
 					pdfOutline: argv.pdfOutline,
 					precedingHtml: argv.precedingHtml,
 					printBg: argv.printBg,
+					revision: argv.revision,
 					scrollDelay: argv.scrollDelay,
 					starlightPrintCss: argv.starlightPrintCss,
 					styles: argv.styles,
+					subtitle: argv.subtitle,
 					timeout: argv.timeout,
+					title: argv.title,
 					url,
 				})
 			} catch (error) {

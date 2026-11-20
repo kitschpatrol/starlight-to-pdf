@@ -21,6 +21,11 @@ describe('resolveOptions', () => {
 		expect(resolved.contents).toBe(true)
 		expect(resolved.contentsLinks).toBe('internal')
 		expect(resolved.margins).toEqual({ bottom: '1cm', left: '1.5cm', right: '1cm', top: '1cm' })
+		expect(resolved.cover).toBe(false)
+		expect(resolved.header).toBe(false)
+		expect(resolved.footer).toBe(false)
+		expect(resolved.title).toBeUndefined()
+		expect(resolved.date).toBeUndefined()
 	})
 
 	it('should accept a URL instance and a margin object', () => {

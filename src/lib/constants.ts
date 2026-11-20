@@ -2,7 +2,9 @@ import type { PaperFormat, PuppeteerLifeCycleEvent } from 'puppeteer'
 
 /** CSS class names injected into the assembled document. */
 export const CLASSNAMES = {
+	backPage: 's2pdf-back-page',
 	contents: 's2pdf-contents',
+	cover: 's2pdf-cover',
 	heading: 's2pdf-heading',
 	mainContainer: 's2pdf-container',
 	pageBreak: 's2pdf-pagebreak',
@@ -13,12 +15,19 @@ export const CLASSNAMES = {
 	wordWrapTable: 's2pdf-word-wrap',
 } as const
 
+/**
+ * Attribute holding the title of a docs page or the table of contents, which
+ * the running header shows on the pages of that content.
+ */
+export const PAGE_TITLE_ATTRIBUTE = 'data-s2pdf-title'
+
 /** CSS selectors for the Starlight page elements the crawler relies on. */
 export const SELECTORS = {
 	heading: '*:has(> h1#_top)',
 	mainInfo: `.${CLASSNAMES.starlight.markdownContent}`,
 	nextLink: "a[rel='next']",
 	sidebarLink: 'nav.sidebar a[href]',
+	siteName: 'meta[property="og:site_name"]',
 	starlightPrintStyles: 'link[media="print"]',
 	stylesheet: 'link[rel~="stylesheet"], style',
 	subheading: `.${CLASSNAMES.starlight.markdownContent} h2`,

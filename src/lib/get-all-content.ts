@@ -1,6 +1,6 @@
 import type { Page } from 'puppeteer'
 import type { Contents, GetAllContentParams, GetAllContentReturn } from './types'
-import { CLASSNAMES, SELECTORS } from './constants'
+import { CLASSNAMES, PAGE_TITLE_ATTRIBUTE, SELECTORS } from './constants'
 import errorCatcher from './error-catcher'
 import { ParsingError } from './errors'
 import getNextUrl from './get-next-url'
@@ -87,12 +87,14 @@ async function parsePage({ internalLinks, page }: ParsePageParams): Promise<Pars
 
 	const evaluatePage = async (link: string, isInternal: boolean): Promise<ParsedData> => {
 		const parsedData = await page.evaluate(
-			(linkArg, selectors, classnames, isInternalArg) => {
+			(linkArg, selectors, classnames, isInternalArg, titleAttribute) => {
 				const { pathname } = new URL(linkArg)
 
 				const heading = document.querySelector<HTMLElement>(selectors.heading)
 				heading?.classList.add(classnames.heading)
 				heading?.setAttribute('id', pathname)
+				// eslint-disable-next-line unicorn/prefer-dom-node-text-content -- Reflects rendered text only, unlike textContent
+				heading?.setAttribute(titleAttribute, heading.innerText)
 
 				const mainInfo = document.querySelector(selectors.mainInfo)
 				mainInfo?.classList.add(classnames.pageBreak)
@@ -152,6 +154,7 @@ async function parsePage({ internalLinks, page }: ParsePageParams): Promise<Pars
 			SELECTORS,
 			CLASSNAMES,
 			isInternal,
+			PAGE_TITLE_ATTRIBUTE,
 		)
 
 		// Serialize after the changes above, such as opened details

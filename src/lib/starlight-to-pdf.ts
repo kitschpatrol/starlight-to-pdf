@@ -2,6 +2,7 @@ import type { Browser, LaunchOptions } from 'puppeteer'
 import puppeteer from 'puppeteer'
 import { scrollPageToBottom } from 'puppeteer-autoscroll-down'
 import type { StarlightToPdfOptions } from './options'
+import type { DocumentInfo } from './types'
 import { composeBody, injectBody } from './body'
 import { SELECTORS } from './constants'
 import applyDynamicPageHeight from './dynamic-page-height'
@@ -11,10 +12,12 @@ import fitTablesToPage from './fit-tables'
 import getAllContent from './get-all-content'
 import getStartingUrl from './get-starting-url'
 import gotoWithRetry from './goto-with-retry'
+import applyHeaderFooter from './header-footer'
 import hideFixedElements from './hide-fixed-elements'
 import keepGridItemsWhole from './keep-grid-items-whole'
 import { log } from './log'
 import { resolveOptions } from './options'
+import { namePrintUnits } from './print-units'
 import recordPdf from './record-pdf'
 import { getTopicsPageUrls, getTopicUrls } from './sidebar-topics'
 
@@ -99,9 +102,27 @@ export async function starlightToPdf(
 			urlQueue,
 		})
 
+		// The site gives the title and the language of the date their defaults
+		const site = await page.evaluate(
+			(siteNameSelector) => ({
+				language: document.documentElement.lang,
+				title: document.querySelector(siteNameSelector)?.getAttribute('content') ?? document.title,
+			}),
+			SELECTORS.siteName,
+		)
+		const documentInfo: DocumentInfo = {
+			date:
+				resolved.date ??
+				new Date().toLocaleDateString(site.language === '' ? undefined : site.language, {
+					dateStyle: 'long',
+				}),
+			title: resolved.title ?? site.title,
+		}
+
 		const body = await composeBody({
 			baseOrigin: baseUrl.origin,
 			contentsData,
+			document: documentInfo,
 			htmlContent,
 			options: resolved,
 		})
@@ -116,6 +137,7 @@ export async function starlightToPdf(
 			printStylesSelector: SELECTORS.starlightPrintStyles,
 			stylesheets,
 			stylesheetSelector: SELECTORS.stylesheet,
+			title: documentInfo.title,
 		})
 		for (const url of failedStylesheetUrls) {
 			log.warn(`Stylesheet failed to load, the PDF may lack some styles: ${url}`)
@@ -132,10 +154,26 @@ export async function starlightToPdf(
 		// Content can't be fitted to a page size set in CSS, which is unknown
 		if (!resolved.cssPageSize) {
 			await fitTablesToPage(page, resolved)
-			if (resolved.dynamicPageHeight) {
-				await applyDynamicPageHeight(page, resolved)
-			} else {
+			// Dynamic pages grow with their content instead
+			if (!resolved.dynamicPageHeight) {
 				await fitGraphicsToPage(page, resolved)
+			}
+		}
+
+		// Named pages carry the page sizes, header, and footer
+		const hasHeaderOrFooter = resolved.header || resolved.footer
+		if (hasHeaderOrFooter || resolved.dynamicPageHeight) {
+			const units = await namePrintUnits(page, resolved)
+			if (resolved.dynamicPageHeight) {
+				await applyDynamicPageHeight(page, units, resolved)
+			}
+
+			if (hasHeaderOrFooter) {
+				await applyHeaderFooter(page, units, {
+					document: documentInfo,
+					footer: resolved.footer,
+					header: resolved.header,
+				})
 			}
 		}
 

@@ -1,20 +1,67 @@
 import type { Browser, Page } from 'puppeteer'
 import puppeteer from 'puppeteer'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import type { StarlightToPdfOptions } from '../src/lib/options'
 import { composeBody, injectBody } from '../src/lib/body'
 import { SELECTORS } from '../src/lib/constants'
 import { resolveOptions } from '../src/lib/options'
 
+// The about, contact, and notice sections in this order, with their paragraphs
+const BACK_PAGE_SECTIONS_REGEX =
+	/s2pdf-back-page-about"><p>First paragraph.<\/p><p>Second paragraph.<\/p>.*s2pdf-back-page-contact"><p>Scalar Studio<br>info@scalar.studio<\/p>.*s2pdf-back-page-notice"><p>Confidential &amp; proprietary.<\/p>/sv
+
 describe('composeBody', () => {
-	it('should escape headings in the table of contents', async () => {
-		const body = await composeBody({
+	async function compose(
+		options: Omit<StarlightToPdfOptions, 'url'>,
+		contentsData = new Set<{ heading: string; url: string }>(),
+	): Promise<string> {
+		return composeBody({
 			baseOrigin: 'https://docs.example',
-			contentsData: new Set([{ heading: 'Use <Card> & <Tabs>', url: '#/use/' }]),
+			contentsData,
+			document: { date: 'November 19, 2026', title: 'Docs & Guides' },
 			htmlContent: '',
-			options: resolveOptions({ contentsName: 'Q&A', url: 'https://docs.example' }),
+			options: resolveOptions({ ...options, url: 'https://docs.example' }),
 		})
+	}
+
+	it('should escape headings in the table of contents', async () => {
+		const body = await compose(
+			{ contentsName: 'Q&A' },
+			new Set([{ heading: 'Use <Card> & <Tabs>', url: '#/use/' }]),
+		)
 		expect(body).toContain('<a href="#/use/">Use &lt;Card&gt; &amp; &lt;Tabs&gt;</a>')
 		expect(body).toContain('<h2>Q&amp;A</h2>')
+		expect(body).toContain('data-s2pdf-title="Q&amp;A"')
+	})
+
+	it('should leave out the cover and back pages by default', async () => {
+		const body = await compose({})
+		expect(body).not.toContain('<section class="s2pdf-cover')
+		expect(body).not.toContain('<section class="s2pdf-back-page')
+	})
+
+	it('should add a cover page with the escaped document details', async () => {
+		const body = await compose({
+			author: 'Scalar <Studio>',
+			cover: true,
+			revision: 'Version 1.0.9',
+			subtitle: 'Cleveland Museum of Art',
+		})
+		expect(body).toContain('<h1>Docs &amp; Guides</h1>')
+		expect(body).toContain('<p class="s2pdf-cover-subtitle">Cleveland Museum of Art</p>')
+		expect(body).toContain('<p>Scalar &lt;Studio&gt;<br>Version 1.0.9 · November 19, 2026</p>')
+	})
+
+	it('should add a back page with paragraphs and line breaks of the text fields', async () => {
+		const body = await compose({
+			about: 'First paragraph.\n\nSecond paragraph.',
+			contact: 'Scalar Studio\ninfo@scalar.studio',
+			date: '',
+			notice: 'Confidential & proprietary.',
+		})
+		const backPage = body.slice(body.indexOf('<section class="s2pdf-back-page'))
+		expect(backPage).toContain('<p><strong>Docs &amp; Guides</strong><br>November 19, 2026</p>')
+		expect(backPage).toMatch(BACK_PAGE_SECTIONS_REGEX)
 	})
 })
 
@@ -40,6 +87,7 @@ describe('injectBody', () => {
 					body: `<!doctype html>
 						<html>
 							<head>
+								<title>Start page</title>
 								<link rel="stylesheet" href="/start.css">
 								<style>.start {}</style>
 							</head>
@@ -60,70 +108,68 @@ describe('injectBody', () => {
 		return page
 	}
 
+	async function inject(
+		page: Page,
+		params: Partial<Parameters<typeof injectBody>[0]>,
+	): Promise<string[]> {
+		return page.evaluate(injectBody, {
+			body: '<p>Assembled</p>',
+			noPrintCss: false,
+			printStylesSelector: SELECTORS.starlightPrintStyles,
+			stylesheets: [],
+			stylesheetSelector: SELECTORS.stylesheet,
+			title: 'Docs',
+			...params,
+		})
+	}
+
 	async function getHeadStylesheets(page: Page): Promise<string[]> {
 		return page.$$eval('head link[rel~="stylesheet"], head style', (elements) =>
 			elements.map((element) => element.outerHTML),
 		)
 	}
 
-	it('should replace the head stylesheets and the body', async () => {
+	it('should replace the head stylesheets, the body, and the title', async () => {
 		const page = await openStartPage()
 		const stylesheets = [
 			`<link rel="stylesheet" href="${origin}/docs.css">`,
 			'<style>.docs {}</style>',
 		]
-		const failedUrls = await page.evaluate(injectBody, {
-			body: '<p>Assembled</p>',
-			noPrintCss: false,
-			printStylesSelector: SELECTORS.starlightPrintStyles,
-			stylesheets,
-			stylesheetSelector: SELECTORS.stylesheet,
-		})
-		expect(failedUrls).toEqual([])
+		expect(await inject(page, { stylesheets })).toEqual([])
 		expect(await getHeadStylesheets(page)).toEqual(stylesheets)
 		expect(await page.$eval('body', (body) => body.getHTML())).toBe('<p>Assembled</p>')
+		expect(await page.title()).toBe('Docs')
 	})
 
 	it('should report stylesheets that fail to load and skip links that never load', async () => {
 		const page = await openStartPage()
-		const failedUrls = await page.evaluate(injectBody, {
-			body: '<p>Assembled</p>',
-			noPrintCss: false,
-			printStylesSelector: SELECTORS.starlightPrintStyles,
+		const failedUrls = await inject(page, {
 			stylesheets: [
 				`<link rel="stylesheet" href="${origin}/missing.css">`,
 				`<link rel="stylesheet" href="${origin}/disabled.css" disabled>`,
 				`<link rel="stylesheet" href="${origin}/plain.css" type="text/plain">`,
 				'<link rel="stylesheet" href="">',
 			],
-			stylesheetSelector: SELECTORS.stylesheet,
 		})
 		expect(failedUrls).toEqual([`${origin}/missing.css`])
 	})
 
 	it('should drop the Starlight print stylesheet when print CSS is disabled', async () => {
 		const page = await openStartPage()
-		await page.evaluate(injectBody, {
-			body: '<p>Assembled</p>',
+		await inject(page, {
 			noPrintCss: true,
-			printStylesSelector: SELECTORS.starlightPrintStyles,
 			stylesheets: [
 				`<link rel="stylesheet" href="${origin}/print.css" media="print">`,
 				'<style>.docs {}</style>',
 			],
-			stylesheetSelector: SELECTORS.stylesheet,
 		})
 		expect(await getHeadStylesheets(page)).toEqual(['<style>.docs {}</style>'])
 	})
 
 	it('should attach declarative shadow roots of the body', async () => {
 		const page = await openStartPage()
-		await page.evaluate(injectBody, {
+		await inject(page, {
 			body: '<div id="host"><template shadowrootmode="open"><p>Shadow</p></template></div>',
-			noPrintCss: false,
-			printStylesSelector: SELECTORS.starlightPrintStyles,
-			stylesheets: [],
-			stylesheetSelector: SELECTORS.stylesheet,
 		})
 		expect(await page.$eval('#host', (host) => host.shadowRoot?.textContent)).toBe('Shadow')
 	})

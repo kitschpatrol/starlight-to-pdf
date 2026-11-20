@@ -5,6 +5,7 @@ import { CLASSNAMES } from '../src/lib/constants'
 import applyDynamicPageHeight, { buildPageRules } from '../src/lib/dynamic-page-height'
 import { setLogger } from '../src/lib/log'
 import { resolveOptions } from '../src/lib/options'
+import { namePrintUnits } from '../src/lib/print-units'
 
 describe('buildPageRules', () => {
 	it('should emit one named @page rule per unit, sized to content plus insets', () => {
@@ -50,10 +51,8 @@ describe('applyDynamicPageHeight', () => {
 					</div>
 				</div>
 			</body>`)
-		await applyDynamicPageHeight(
-			page,
-			resolveOptions({ margins: '0 0 0 0', url: 'https://example.com' }),
-		)
+		const options = resolveOptions({ margins: '0 0 0 0', url: 'https://example.com' })
+		await applyDynamicPageHeight(page, await namePrintUnits(page, options), options)
 
 		expect(await page.$eval('head style', (style) => style.textContent)).toBe(
 			'@page s2pdf-page-0 { size: 816px 302px; }\n@page s2pdf-page-1 { size: 816px 202px; }',

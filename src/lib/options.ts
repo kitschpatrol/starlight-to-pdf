@@ -19,6 +19,13 @@ const SPACING_REGEX = /^\d+(?:\.\d+)?(?:mm|in|cm|px|pt|pc)?$/v
  */
 export type StarlightToPdfOptions = {
 	/**
+	 * Adds a back page with this text, such as a description of the project.
+	 * Blank lines separate paragraphs.
+	 */
+	about?: string | undefined
+	/** Author shown on the cover page, such as a person or an organization. */
+	author?: string | undefined
+	/**
 	 * Path to a browser executable to use instead of the default one (e.g.
 	 * `/usr/bin/chromium-browser`).
 	 */
@@ -29,6 +36,11 @@ export type StarlightToPdfOptions = {
 	 * available (e.g., certain CI/CD pipelines or Docker containers).
 	 */
 	browserNoSandbox?: boolean | undefined
+	/**
+	 * Adds a back page with these contact details. Blank lines separate
+	 * paragraphs, and line breaks are kept.
+	 */
+	contact?: string | undefined
 	/** Generate a table of contents in the PDF. */
 	contents?: boolean | undefined
 	/**
@@ -40,12 +52,22 @@ export type StarlightToPdfOptions = {
 	/** Customizes the generated table of contents name in the PDF. */
 	contentsName?: string | undefined
 	/**
+	 * Adds a cover page with the title, subtitle, author, revision, and date.
+	 */
+	cover?: boolean | undefined
+	/**
 	 * Allows setting the PDF page size using CSS `@page`. If the predefined sizes
 	 * in the `format` option don't meet your needs, enable this option and
 	 * specify the desired page size in custom CSS provided via `styles` (e.g.,
 	 * `@page { size: 8.5in 14in; }`).
 	 */
 	cssPageSize?: boolean | undefined
+	/**
+	 * Date shown on the cover and back pages and in the footer. Defaults to
+	 * today's date, formatted for the language of the site. Pass an empty string
+	 * to leave it out.
+	 */
+	date?: string | undefined
 	/**
 	 * Experimental: sizes each PDF page individually so every docs page fits on a
 	 * single page without breaks — constant width taken from `format`, height as
@@ -69,20 +91,20 @@ export type StarlightToPdfOptions = {
 	 */
 	followingHtml?: string | undefined
 	/**
-	 * Path to the HTML file for the PDF print footer. For more details, check the
-	 * PDF header and footer section in the readme and Puppeteer's `PDFOptions`.
+	 * Adds a footer with the title, date, and page numbers to every page except
+	 * the cover and back pages. Needs bottom margins to print in.
 	 */
-	footer?: string | undefined
+	footer?: boolean | undefined
 	/**
 	 * The paper format for the PDF file. Refer to Puppeteer's paper formats for
 	 * more details.
 	 */
 	format?: (typeof PAPER_FORMATS)[number] | undefined
 	/**
-	 * Path to the HTML file for the PDF print header. For more details, check the
-	 * PDF header and footer section in the readme and Puppeteer's `PDFOptions`.
+	 * Adds a header with the title of the current docs page to every page except
+	 * the cover and back pages. Needs top margins to print in.
 	 */
-	header?: string | undefined
+	header?: boolean | undefined
 	/**
 	 * The last link to parse (e.g. `/docs/demo`). Further parsing stops once this
 	 * link is reached and parsed.
@@ -94,6 +116,11 @@ export type StarlightToPdfOptions = {
 	 * and left margins respectively.
 	 */
 	margins?: PDFMargin | string | undefined
+	/**
+	 * Adds a back page with this notice, such as a confidentiality or copyright
+	 * notice. Blank lines separate paragraphs.
+	 */
+	notice?: string | undefined
 	/**
 	 * Padding for the PDF content. Provide as a string with 4 values separated by
 	 * space, reflecting the top, right, bottom and left paddings respectively.
@@ -123,6 +150,10 @@ export type StarlightToPdfOptions = {
 	 */
 	printBg?: boolean | undefined
 	/**
+	 * Revision shown on the cover and back pages, such as `Version 1.2.0`.
+	 */
+	revision?: string | undefined
+	/**
 	 * The delay (in milliseconds) between each viewport scroll to allow
 	 * lazy-loaded content to fully render.
 	 */
@@ -138,11 +169,18 @@ export type StarlightToPdfOptions = {
 	 * of special CSS classes used by the tool.
 	 */
 	styles?: string | undefined
+	/** Subtitle shown on the cover page. */
+	subtitle?: string | undefined
 	/**
 	 * Timeout for both the page actions and `protocolTimeout` in milliseconds.
 	 * You may need to increase this value for parsing large websites.
 	 */
 	timeout?: number | undefined
+	/**
+	 * Title of the document, shown on the cover and back pages and in the footer,
+	 * and stored as the PDF title. Defaults to the title of the site.
+	 */
+	title?: string | undefined
 	/**
 	 * The URL of the Starlight powered documentation website to convert to PDF.
 	 * Strings without a protocol default to HTTPS.
@@ -157,9 +195,12 @@ export const DEFAULT_STARLIGHT_TO_PDF_OPTIONS = {
 	browserNoSandbox: false,
 	contents: true,
 	contentsLinks: 'internal',
+	cover: false,
 	cssPageSize: false,
 	dynamicPageHeight: false,
+	footer: false,
 	format: 'letter',
+	header: false,
 	margins: DEFAULT_MARGINS,
 	pageWaitUntil: 'domcontentloaded',
 	pdfOutline: false,
@@ -171,6 +212,43 @@ export const DEFAULT_STARLIGHT_TO_PDF_OPTIONS = {
 
 function mapDefined<T, R>(value: T | undefined, transform: (value: T) => R): R | undefined {
 	return value === undefined ? undefined : transform(value)
+}
+
+/**
+ * Resolves the options of the cover and back pages and the running header and
+ * footer.
+ */
+function resolveDocumentOptions(
+	options: StarlightToPdfOptions,
+): Pick<
+	ResolvedOptions,
+	| 'about'
+	| 'author'
+	| 'contact'
+	| 'cover'
+	| 'date'
+	| 'footer'
+	| 'header'
+	| 'notice'
+	| 'revision'
+	| 'subtitle'
+	| 'title'
+> {
+	const defaults = DEFAULT_STARLIGHT_TO_PDF_OPTIONS
+
+	return {
+		about: options.about,
+		author: options.author,
+		contact: options.contact,
+		cover: options.cover ?? defaults.cover,
+		date: options.date,
+		footer: options.footer ?? defaults.footer,
+		header: options.header ?? defaults.header,
+		notice: options.notice,
+		revision: options.revision,
+		subtitle: options.subtitle,
+		title: options.title,
+	}
 }
 
 /**
@@ -191,6 +269,7 @@ export function resolveOptions(options: StarlightToPdfOptions): ResolvedOptions 
 	const margins = options.margins ?? defaults.margins
 
 	return {
+		...resolveDocumentOptions(options),
 		browserExecutable: mapDefined(options.browserExecutable, (value) =>
 			validatePath(value, 'browserExecutable'),
 		),
@@ -205,9 +284,7 @@ export function resolveOptions(options: StarlightToPdfOptions): ResolvedOptions 
 		followingHtml: mapDefined(options.followingHtml, (value) =>
 			validateFileExtension(value, 'html', 'followingHtml'),
 		),
-		footer: mapDefined(options.footer, (value) => validateFileExtension(value, 'html', 'footer')),
 		format: options.format ?? defaults.format,
-		header: mapDefined(options.header, (value) => validateFileExtension(value, 'html', 'header')),
 		last: mapDefined(options.last, (value) => resolveLastUrl(value, url.origin)),
 		margins: typeof margins === 'string' ? parseMargins(margins) : margins,
 		paddings: mapDefined(options.paddings, (value) => validateSpacing(value, 'paddings')),

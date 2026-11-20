@@ -1,7 +1,9 @@
-import type { Contents, GetAllContentReturn, ResolvedOptions } from './types'
-import { CLASSNAMES } from './constants'
+import type { Contents, DocumentInfo, GetAllContentReturn, ResolvedOptions } from './types'
+import { CLASSNAMES, PAGE_TITLE_ATTRIBUTE } from './constants'
 import getFileContent from './get-file-content'
 import { log } from './log'
+
+const PARAGRAPH_SEPARATOR_REGEX = /\n\s*\n/v
 
 /** Escapes text for HTML content and quoted attribute values. */
 function escapeHtml(text: string): string {
@@ -10,6 +12,74 @@ function escapeHtml(text: string): string {
 		.replaceAll('<', '&lt;')
 		.replaceAll('>', '&gt;')
 		.replaceAll('"', '&quot;')
+}
+
+function hasText(text: string | undefined): text is string {
+	return text !== undefined && text !== ''
+}
+
+/** Escapes the lines that have text and joins them with line breaks. */
+function linesToHtml(lines: Array<string | undefined>): string {
+	return lines
+		.filter((line) => hasText(line))
+		.map((line) => escapeHtml(line))
+		.join('<br>')
+}
+
+/**
+ * Converts plain text to HTML paragraphs. Blank lines separate paragraphs, and
+ * line breaks within a paragraph are kept.
+ */
+function textToParagraphs(text: string): string {
+	return text
+		.replaceAll('\r\n', '\n')
+		.trim()
+		.split(PARAGRAPH_SEPARATOR_REGEX)
+		.map((paragraph) => `<p>${linesToHtml(paragraph.split('\n'))}</p>`)
+		.join('')
+}
+
+/** Joins the revision and date that have text into one line. */
+function getRevisionAndDate(document: DocumentInfo, options: ResolvedOptions): string {
+	return [options.revision, document.date].filter((text) => hasText(text)).join(' · ')
+}
+
+function createCover(document: DocumentInfo, options: ResolvedOptions): string {
+	const subtitle = hasText(options.subtitle)
+		? `<p class="${CLASSNAMES.cover}-subtitle">${escapeHtml(options.subtitle)}</p>`
+		: ''
+
+	return `<section class="${CLASSNAMES.cover} ${CLASSNAMES.pageBreak}">
+						<div>
+							<h1>${escapeHtml(document.title)}</h1>
+							${subtitle}
+						</div>
+						<p>${linesToHtml([options.author, getRevisionAndDate(document, options)])}</p>
+					</section>`
+}
+
+function createBackPage(document: DocumentInfo, options: ResolvedOptions): string {
+	// Fine print goes last, at the bottom of the page
+	const sections = [
+		{ name: 'about', text: options.about },
+		{ name: 'contact', text: options.contact },
+		{ name: 'notice', text: options.notice },
+	]
+		.filter((section): section is { name: string; text: string } => hasText(section.text))
+		.map(
+			({ name, text }) =>
+				`<div class="${CLASSNAMES.backPage}-${name}">${textToParagraphs(text)}</div>`,
+		)
+	if (sections.length === 0) {
+		return ''
+	}
+
+	const revisionAndDate = getRevisionAndDate(document, options)
+
+	return `<section class="${CLASSNAMES.backPage}">
+						<p><strong>${escapeHtml(document.title)}</strong>${revisionAndDate === '' ? '' : `<br>${escapeHtml(revisionAndDate)}`}</p>
+						${sections.join('')}
+					</section>`
 }
 
 function composeListElement(contentData: Contents[]): string {
@@ -38,7 +108,7 @@ function createContents(contentData: Contents[], options: ResolvedOptions): stri
 		}`,
 	)
 
-	return `<div class="${CLASSNAMES.starlight.markdownContent} ${CLASSNAMES.contents} ${CLASSNAMES.pageBreak}">
+	return `<div class="${CLASSNAMES.starlight.markdownContent} ${CLASSNAMES.contents} ${CLASSNAMES.pageBreak}" ${PAGE_TITLE_ATTRIBUTE}="${escapeHtml(contentsName)}">
 						<h2>${escapeHtml(contentsName)}</h2>
 						${list}
 					</div>`
@@ -46,19 +116,23 @@ function createContents(contentData: Contents[], options: ResolvedOptions): stri
 
 type ComposeBodyParams = Omit<GetAllContentReturn, 'stylesheets'> & {
 	baseOrigin: string
+	document: DocumentInfo
 	options: ResolvedOptions
 }
 
 /**
- * Assembles the final HTML body from the parsed pages, table of contents, and
- * user-provided styles and surrounding HTML fragments.
+ * Assembles the final HTML body from the parsed pages, cover and back pages,
+ * table of contents, and user-provided styles and surrounding HTML fragments.
  */
 export async function composeBody({
 	baseOrigin,
 	contentsData,
+	document,
 	htmlContent,
 	options,
 }: ComposeBodyParams): Promise<string> {
+	const cover = options.cover ? createCover(document, options) : ''
+	const backPage = createBackPage(document, options)
 	const contents = options.contents ? createContents([...contentsData], options) : ''
 
 	const { followingHtml: followingRoute, paddings, precedingHtml: precedingRoute, styles } = options
@@ -89,13 +163,63 @@ export async function composeBody({
 										break-after: page;
 									}
 
+									.${CLASSNAMES.cover},
+									.${CLASSNAMES.backPage} {
+										display: flex;
+										flex-direction: column;
+										gap: 1.5rem;
+										/* Fills the page area when printed */
+										height: 100vh;
+										line-height: 1.5;
+										color: var(--sl-color-gray-2);
+									}
+
+									.${CLASSNAMES.cover} {
+										justify-content: space-between;
+									}
+
+									.${CLASSNAMES.backPage} {
+										justify-content: flex-end;
+										break-before: page;
+										font-size: var(--sl-text-sm);
+									}
+
+									:is(.${CLASSNAMES.cover}, .${CLASSNAMES.backPage}) p {
+										margin: 0;
+									}
+
+									.${CLASSNAMES.backPage} p + p {
+										margin-top: 0.75em;
+									}
+
+									.${CLASSNAMES.cover} h1 {
+										margin: 0 0 0.25em;
+										font-size: var(--sl-text-5xl);
+										line-height: 1.1;
+										color: var(--sl-color-white);
+									}
+
+									.${CLASSNAMES.cover}-subtitle {
+										font-size: var(--sl-text-2xl);
+									}
+
+									.${CLASSNAMES.backPage} strong {
+										color: var(--sl-color-white);
+									}
+
+									.${CLASSNAMES.backPage}-notice {
+										color: var(--sl-color-gray-3);
+									}
+
 									${userStyles}
 									${pagePaddings}
 								</style>
+								${cover}
 								${precedingHtml}
 								${contents}
 								<div class="${CLASSNAMES.mainContainer}">${htmlContent}</div>
 								${followingHtml}
+								${backPage}
 							 `
 
 	return body
@@ -107,13 +231,14 @@ type InjectBodyParams = {
 	printStylesSelector: string
 	stylesheets: string[]
 	stylesheetSelector: string
+	title: string
 }
 
 /**
  * Replaces the page body with the assembled HTML and the head's stylesheets
- * with the stylesheets of all parsed pages, then waits for linked stylesheets
- * to load. Returns the URLs of stylesheets that failed to load. Runs in the
- * browser context.
+ * with the stylesheets of all parsed pages, sets the document title, which
+ * becomes the PDF title, then waits for linked stylesheets to load. Returns the
+ * URLs of stylesheets that failed to load. Runs in the browser context.
  */
 export async function injectBody({
 	body,
@@ -121,7 +246,10 @@ export async function injectBody({
 	printStylesSelector,
 	stylesheets,
 	stylesheetSelector,
+	title,
 }: InjectBodyParams): Promise<string[]> {
+	document.title = title
+
 	for (const element of document.head.querySelectorAll(stylesheetSelector)) {
 		element.remove()
 	}
