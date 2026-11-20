@@ -163,6 +163,16 @@ export async function composeBody({
 										break-after: page;
 									}
 
+									/* Sets page titles apart from their content, as the panels of the site do */
+									.${CLASSNAMES.heading} {
+										margin-bottom: 1.5rem;
+									}
+
+									/* Each page title starts a page, which its margins already offset */
+									.${CLASSNAMES.heading} > h1 {
+										margin-top: 0;
+									}
+
 									.${CLASSNAMES.contents} ul {
 										padding-inline-start: 0;
 										list-style: none;
