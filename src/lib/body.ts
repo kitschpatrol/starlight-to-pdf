@@ -66,7 +66,8 @@ export async function composeBody({
 									aside,
 									code,
 									figure,
-									pre {
+									pre,
+									tr {
 										break-inside: avoid !important;
 									}
 
