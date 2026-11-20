@@ -201,10 +201,23 @@ export async function composeBody({
 										margin: 0;
 									}
 
+									/* Up to two columns, as many as fit at a comfortable width */
+									.${CLASSNAMES.contents} > ul {
+										columns: 2 18em;
+										column-gap: 2rem;
+									}
+
+									/* Keeps each page entry with its sections in one column */
 									.${CLASSNAMES.contents} > ul > li {
 										margin-top: 0.875em;
 										font-weight: 600;
 										color: var(--sl-color-white);
+										break-inside: avoid;
+									}
+
+									/* Breaks drop the margin at the top of the other columns */
+									.${CLASSNAMES.contents} > ul > li:first-child {
+										margin-top: 0;
 									}
 
 									.${CLASSNAMES.contents} li li {
