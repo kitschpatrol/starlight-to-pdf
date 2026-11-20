@@ -245,9 +245,11 @@ export async function composeBody({
 
 									.${CLASSNAMES.cover} h1 {
 										margin: 0 0 0.25em;
-										font-size: var(--sl-text-5xl);
+										/* Larger than page titles, and smaller on narrow pages so words fit */
+										font-size: min(var(--sl-text-6xl), 10vw);
 										line-height: 1.1;
 										color: var(--sl-color-white);
+										text-wrap: balance;
 									}
 
 									.${CLASSNAMES.cover}-subtitle {
