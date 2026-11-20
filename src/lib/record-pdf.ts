@@ -1,10 +1,11 @@
 import type { Page, PDFOptions } from 'puppeteer'
-import { mkdir } from 'node:fs/promises'
+import { mkdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import type { ResolvedOptions } from './types'
 import errorCatcher from './error-catcher'
 import { ParsingError } from './errors'
 import { log } from './log'
+import { resolveLinkDestinations } from './resolve-link-destinations'
 
 type RecordPdfParams = {
 	hostname: string
@@ -39,17 +40,28 @@ async function recordPdf({ hostname, options, page }: RecordPdfParams): Promise<
 		format: options.format,
 		margin: options.margins,
 		outline: options.pdfOutline,
-		path: pdfPath,
 		preferCSSPageSize: options.cssPageSize || options.dynamicPageHeight,
 		printBackground: options.printBg,
 		timeout: options.timeout,
 	}
 
-	const [error] = await errorCatcher(page.pdf(pdfOptions))
+	const [error, chromePdf] = await errorCatcher(page.pdf(pdfOptions))
 
 	if (error) {
 		throw new ParsingError(`PDF generation failed. Target file: ${pdfPath}.`, {
 			originalErrorMessage: error.message,
+		})
+	}
+
+	const { linkCount, pdf } = resolveLinkDestinations(chromePdf)
+	if (linkCount > 0) {
+		log.info(`Pointed ${linkCount} internal link(s) straight at their page.`)
+	}
+
+	const [writeError] = await errorCatcher(writeFile(pdfPath, pdf))
+	if (writeError) {
+		throw new ParsingError(`Couldn't write the PDF file: ${pdfPath}. The program aborts.`, {
+			originalErrorMessage: writeError.message,
 		})
 	}
 
