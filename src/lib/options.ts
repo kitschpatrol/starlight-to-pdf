@@ -135,8 +135,9 @@ export type StarlightToPdfOptions = {
 	 */
 	path?: string | undefined
 	/**
-	 * Enables a side outline in the PDF file. It's an `outline` property in
-	 * Puppeteer's `PDFOptions`.
+	 * Adds an outline of the headings to the PDF file, which PDF viewers show as
+	 * bookmarks in a sidebar. It's the `outline` property of Puppeteer's
+	 * `PDFOptions`.
 	 */
 	pdfOutline?: boolean | undefined
 	/**
@@ -203,7 +204,7 @@ export const DEFAULT_STARLIGHT_TO_PDF_OPTIONS = {
 	header: false,
 	margins: DEFAULT_MARGINS,
 	pageWaitUntil: 'domcontentloaded',
-	pdfOutline: false,
+	pdfOutline: true,
 	printBg: false,
 	scrollDelay: SCROLL_DELAY_MS,
 	starlightPrintCss: true,

@@ -180,7 +180,7 @@ await yargsInstance
 				.option('pdf-outline', {
 					default: defaults.pdfOutline,
 					describe:
-						"Enables a side outline in the PDF file. It's an `outline` property in Puppeteer's PDFOptions.",
+						'Adds an outline of the headings to the PDF file, which PDF viewers show as bookmarks. Use --no-pdf-outline to disable it.',
 					type: 'boolean',
 				})
 				.option('preceding-html', {

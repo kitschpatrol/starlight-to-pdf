@@ -24,6 +24,7 @@ describe('resolveOptions', () => {
 		expect(resolved.cover).toBe(false)
 		expect(resolved.header).toBe(false)
 		expect(resolved.footer).toBe(false)
+		expect(resolved.pdfOutline).toBe(true)
 		expect(resolved.title).toBeUndefined()
 		expect(resolved.date).toBeUndefined()
 	})

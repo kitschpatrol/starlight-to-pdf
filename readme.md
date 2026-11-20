@@ -144,7 +144,7 @@ starlight-to-pdf <url>
 | `--paddings`            | Sets padding for the PDF content. Provide as a string with 4 values separated by space, reflecting the top, right, bottom and left paddings respectively. Paddings are disabled by default.                                                                            | `string`                                                                                     |                       |
 | `--page-wait-until`     | Specifies the event that indicates a successful page load.                                                                                                                                                                                                             | `"load"` `"domcontentloaded"` `"networkidle0"` `"networkidle2"`                              | `"domcontentloaded"`  |
 | `--path`<br>`-p`        | Sets the directory path for the output PDF. Default is the current working directory.                                                                                                                                                                                  | `string`                                                                                     |                       |
-| `--pdf-outline`         | Enables a side outline in the PDF file. It's an `outline` property in Puppeteer's PDFOptions.                                                                                                                                                                          | `boolean`                                                                                    | `false`               |
+| `--pdf-outline`         | Adds an outline of the headings to the PDF file, which PDF viewers show as bookmarks. Use --no-pdf-outline to disable it.                                                                                                                                              | `boolean`                                                                                    | `true`                |
 | `--preceding-html`      | Path to an HTML file which content will be inserted at the beginning of the PDF file. This option may be useful for adding a cover page.                                                                                                                               | `string`                                                                                     |                       |
 | `--print-bg`            | Enables printing of background graphics. It's a `printBackground` property in Puppeteer's PDFOptions.                                                                                                                                                                  | `boolean`                                                                                    | `false`               |
 | `--revision`            | Revision shown on the cover and back pages, such as 'Version 1.2.0'.                                                                                                                                                                                                   | `string`                                                                                     |                       |
@@ -165,7 +165,7 @@ starlight-to-pdf <url>
 A conversion exercising most of the options:
 
 ```sh
-starlight-to-pdf spectrum.snipshot.dev -p ./output --filename spectrum-docs --contents-name "Table of contents" --exclude '/demo /contacts' --cover --subtitle 'Library documentation' --header --footer --notice 'Spectrum is released under the MIT License.' --print-bg --pdf-outline
+starlight-to-pdf spectrum.snipshot.dev -p ./output --filename spectrum-docs --contents-name "Table of contents" --exclude '/demo /contacts' --cover --subtitle 'Library documentation' --header --footer --notice 'Spectrum is released under the MIT License.' --print-bg
 ```
 
 Resulting PDF file: [spectrum-docs.pdf](./assets/spectrum-docs.pdf)
@@ -203,7 +203,6 @@ import { starlightToPdf } from '@kitschpatrol/starlight-to-pdf'
 const result = await starlightToPdf({
   filename: 'starlight-docs',
   format: 'a4',
-  pdfOutline: true,
   url: 'https://starlight.astro.build',
 })
 
