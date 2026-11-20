@@ -70,6 +70,11 @@ export async function composeBody({
 										break-inside: avoid !important;
 									}
 
+									/* Anchor links make Starlight headings inline, which voids their own break-after */
+									.${CLASSNAMES.starlight.headingWrapper} {
+										break-after: avoid;
+									}
+
 									.${CLASSNAMES.pageBreak} {
 										break-after: page;
 									}

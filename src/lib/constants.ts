@@ -7,6 +7,7 @@ export const CLASSNAMES = {
 	mainContainer: 's2pdf-container',
 	pageBreak: 's2pdf-pagebreak',
 	starlight: {
+		headingWrapper: 'sl-heading-wrapper',
 		markdownContent: 'sl-markdown-content',
 	},
 } as const
