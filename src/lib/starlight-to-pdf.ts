@@ -63,7 +63,9 @@ export async function starlightToPdf(
 
 		browser = await puppeteer.launch(browserOptions)
 		const page = await browser.newPage()
-		await page.setViewport({ width: 799, height: 1150 })
+		// Charts and other canvases draw at twice the pixel density, so the images
+		// captured from them stay sharp in print
+		await page.setViewport({ deviceScaleFactor: 2, height: 1150, width: 799 })
 		page.setDefaultTimeout(resolved.timeout)
 
 		const startUrl = await getStartingUrl({ page, url: baseUrl })
@@ -129,6 +131,10 @@ export async function starlightToPdf(
 		})
 
 		log.info('Adjusting content. It may take a while...')
+		// Images load at the pixel density that sites serve by default, which keeps
+		// the PDF small. The cache would offer the denser images of the crawl.
+		await page.setViewport({ width: 799, height: 1150 })
+		await page.setCacheEnabled(false)
 		await page.goto(contentStartUrl.href, {
 			waitUntil: 'networkidle2',
 		})
