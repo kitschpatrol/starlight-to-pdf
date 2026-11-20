@@ -7,6 +7,7 @@ import getNextUrl from './get-next-url'
 import gotoWithRetry from './goto-with-retry'
 import { log } from './log'
 import { normalizePageUrl } from './options'
+import rasterizeCanvases from './rasterize-canvases'
 
 type ProcessPageContentReturn = {
 	contents: Contents
@@ -124,6 +125,7 @@ async function processPageContent(
 	page: Page,
 	internalLinks: boolean,
 ): Promise<ProcessPageContentReturn> {
+	await rasterizeCanvases(page)
 	const parsedData = await parsePage({ internalLinks, page })
 
 	const contents: Contents = {
