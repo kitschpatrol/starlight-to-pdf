@@ -10,6 +10,7 @@ export const CLASSNAMES = {
 		headingWrapper: 'sl-heading-wrapper',
 		markdownContent: 'sl-markdown-content',
 	},
+	wordWrapTable: 's2pdf-word-wrap',
 } as const
 
 /** CSS selectors for the Starlight page elements the crawler relies on. */

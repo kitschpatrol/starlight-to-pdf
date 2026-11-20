@@ -7,6 +7,7 @@ import { SELECTORS } from './constants'
 import applyDynamicPageHeight from './dynamic-page-height'
 import { ParsingError } from './errors'
 import fitGraphicsToPage from './fit-graphics'
+import fitTablesToPage from './fit-tables'
 import getAllContent from './get-all-content'
 import getStartingUrl from './get-starting-url'
 import gotoWithRetry from './goto-with-retry'
@@ -123,10 +124,14 @@ export async function starlightToPdf(
 			size: 1100,
 		})
 
-		if (resolved.dynamicPageHeight) {
-			await applyDynamicPageHeight(page, resolved)
-		} else if (!resolved.cssPageSize) {
-			await fitGraphicsToPage(page, resolved)
+		// Content can't be fitted to a page size set in CSS, which is unknown
+		if (!resolved.cssPageSize) {
+			await fitTablesToPage(page, resolved)
+			if (resolved.dynamicPageHeight) {
+				await applyDynamicPageHeight(page, resolved)
+			} else {
+				await fitGraphicsToPage(page, resolved)
+			}
 		}
 
 		const pdfPath = await recordPdf({ hostname: baseUrl.hostname, options: resolved, page })
