@@ -1,8 +1,22 @@
 import type { Browser, Page } from 'puppeteer'
 import puppeteer from 'puppeteer'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { injectBody } from '../src/lib/body'
+import { composeBody, injectBody } from '../src/lib/body'
 import { SELECTORS } from '../src/lib/constants'
+import { resolveOptions } from '../src/lib/options'
+
+describe('composeBody', () => {
+	it('should escape headings in the table of contents', async () => {
+		const body = await composeBody({
+			baseOrigin: 'https://docs.example',
+			contentsData: new Set([{ heading: 'Use <Card> & <Tabs>', url: '#/use/' }]),
+			htmlContent: '',
+			options: resolveOptions({ contentsName: 'Q&A', url: 'https://docs.example' }),
+		})
+		expect(body).toContain('<a href="#/use/">Use &lt;Card&gt; &amp; &lt;Tabs&gt;</a>')
+		expect(body).toContain('<h2>Q&amp;A</h2>')
+	})
+})
 
 describe('injectBody', () => {
 	const origin = 'https://docs.example'

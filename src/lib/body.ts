@@ -3,11 +3,20 @@ import { CLASSNAMES } from './constants'
 import getFileContent from './get-file-content'
 import { log } from './log'
 
+/** Escapes text for HTML content and quoted attribute values. */
+function escapeHtml(text: string): string {
+	return text
+		.replaceAll('&', '&amp;')
+		.replaceAll('<', '&lt;')
+		.replaceAll('>', '&gt;')
+		.replaceAll('"', '&quot;')
+}
+
 function composeListElement(contentData: Contents[]): string {
 	let contentsHtml = ''
 
 	for (const value of contentData) {
-		contentsHtml += `<li><a href="${value.url}">${value.heading}</a>`
+		contentsHtml += `<li><a href="${escapeHtml(value.url)}">${escapeHtml(value.heading)}</a>`
 		if (value.children) {
 			contentsHtml += composeListElement(value.children)
 		}
@@ -30,7 +39,7 @@ function createContents(contentData: Contents[], options: ResolvedOptions): stri
 	)
 
 	return `<div class="${CLASSNAMES.starlight.markdownContent} ${CLASSNAMES.contents} ${CLASSNAMES.pageBreak}">
-						<h2>${contentsName}</h2>
+						<h2>${escapeHtml(contentsName)}</h2>
 						${list}
 					</div>`
 }
