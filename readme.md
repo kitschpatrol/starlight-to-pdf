@@ -21,7 +21,7 @@
 
 ## Overview
 
-`@kitschpatrol/starlight-to-pdf` crawls a documentation website built with [Starlight](https://starlight.astro.build) and renders it into a single PDF file, complete with a generated table of contents, optional cover and back pages, a running header and footer with page numbers, an optional PDF outline, and customizable margins and styles.
+`@kitschpatrol/starlight-to-pdf` crawls a documentation website built with [Starlight](https://starlight.astro.build) and renders it into a single PDF file, complete with a generated table of contents with page numbers, optional cover and back pages, a running header and footer with page numbers, a PDF outline, and customizable margins and styles.
 
 This is a fork of [Linkerin/starlight-to-pdf](https://github.com/Linkerin/starlight-to-pdf) by Alexei Gusev, which adds a few new features and reworks the project structure a bit to address some matters of preference.
 
@@ -31,10 +31,15 @@ Stylistic and functional changes include:
 - Automatically detect and correctly crawl sites that use the [starlight-sidebar-topics](https://github.com/HiDeoo/starlight-sidebar-topics) plugin
 - Add `--browser-no-sandbox` flag for compatibility with certain environments
 - Add experimental `--dynamic-page-height` flag that lets page content drive the final page height
-- Carry every page's styles into the PDF and adapt diagrams, canvases, tables, and grids for print
+- Carry every page's styles into the PDF, adapt diagrams, canvases, tables, and grids for print, and keep headings and cards from splitting across pages
 - Add cover and back pages, and replace the Puppeteer header and footer templates with a running header and footer in the site's font
+- Number the pages of the table of contents and set it in up to two columns
+- Link videos, audio, and embedded video players, which can't play on paper, to their section on the website (`--media-links`)
+- Point internal links straight at their page, so they keep working after PDF tools such as compressors drop named destinations
 - Change `--contents-links` default to `internal`
 - Change `--format` default to `letter`
+- Change `--margins` default to `2cm 1.5cm 2cm 1.5cm`, which leaves room for the header and footer
+- Turn on `--pdf-outline` by default
 - Fix `--exclude` and `--last` matching on sites built without trailing slashes
 - Relax path validation so Windows-style absolute paths are accepted
 - Reject path separators in `--filename` and negative `--timeout` values
