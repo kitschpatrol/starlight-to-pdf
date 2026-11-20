@@ -163,6 +163,42 @@ export async function composeBody({
 										break-after: page;
 									}
 
+									.${CLASSNAMES.contents} ul {
+										padding-inline-start: 0;
+										list-style: none;
+									}
+
+									.${CLASSNAMES.contents} ul ul {
+										padding-inline-start: 1.25em;
+									}
+
+									.${CLASSNAMES.contents} li {
+										margin: 0;
+									}
+
+									.${CLASSNAMES.contents} > ul > li {
+										margin-top: 0.875em;
+										font-weight: 600;
+										color: var(--sl-color-white);
+									}
+
+									.${CLASSNAMES.contents} li li {
+										margin-top: 0.25em;
+										font-weight: normal;
+										color: var(--sl-color-gray-2);
+									}
+
+									.${CLASSNAMES.contents} a {
+										color: inherit;
+										text-decoration: none;
+									}
+
+									/* Keeps each page entry with the first of its sections */
+									.${CLASSNAMES.contents} > ul > li > a {
+										display: block;
+										break-after: avoid;
+									}
+
 									.${CLASSNAMES.cover},
 									.${CLASSNAMES.backPage} {
 										display: flex;
