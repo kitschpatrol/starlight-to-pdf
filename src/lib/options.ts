@@ -118,9 +118,9 @@ export type StarlightToPdfOptions = {
 	margins?: PDFMargin | string | undefined
 	/**
 	 * Links videos, audio, and embedded YouTube and Vimeo players, which can't
-	 * play on paper, to their section on the website, and draws a play badge on
-	 * the frame of each video. Links use the canonical URL of the page, so they
-	 * point to the published site even when crawling a local server.
+	 * play on paper, to their section on the website, and shows a play badge on
+	 * each video. Links use the canonical URL of the page, so they point to the
+	 * published site even when crawling a local server.
 	 */
 	mediaLinks?: boolean | undefined
 	/**

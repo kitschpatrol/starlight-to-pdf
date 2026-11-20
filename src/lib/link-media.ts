@@ -2,26 +2,20 @@ import type { Page } from 'puppeteer'
 import { CLASSNAMES, SELECTORS } from './constants'
 import { log } from './log'
 
-type MarkMediaResult = {
-	linkedCount: number
-	videosWithoutBadgeCount: number
-}
-
 /**
  * Links the media in the content that can't play on paper to their section on
- * the website: videos, audio, and embedded YouTube and Vimeo players. Each gets
- * a caption with the link, and each video also becomes a link itself and shows
- * its current frame, or else its poster, with a play badge drawn on it. Runs in
- * the browser context.
+ * the website, and returns how many it linked: videos, audio, and embedded
+ * YouTube and Vimeo players. Each gets a caption with the link, and each video
+ * also becomes a link itself, with a play badge over it, and keeps its current
+ * frame as its poster. Runs in the browser context.
  */
-async function markMedia(
+function markMedia(
 	contentSelector: string,
-	classnames: { media: string; mediaLink: string },
-): Promise<MarkMediaResult> {
-	const result: MarkMediaResult = { linkedCount: 0, videosWithoutBadgeCount: 0 }
+	classnames: { media: string; mediaBadge: string; mediaLink: string },
+): number {
 	const content = document.querySelector(contentSelector)
 	if (content === null) {
-		return result
+		return 0
 	}
 
 	// Unlike the crawled URL, the canonical URL points to the published site
@@ -36,60 +30,26 @@ async function markMedia(
 	const headingSelector = 'h2[id], h3[id], h4[id], h5[id], h6[id]'
 	const mediaSelector =
 		'video, audio, iframe[src*="youtube.com/embed/"], iframe[src*="youtube-nocookie.com/embed/"], iframe[src*="player.vimeo.com/video/"]'
+	// A circle with a triangle pointing right, centered on its centroid
+	const badge = `<svg class="${classnames.mediaBadge}" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="32" fill="rgb(0 0 0 / 55%)"/><path d="M22.7 16 L22.7 48 L50.5 32 Z" fill="#fff"/></svg>`
 
-	// Draws a play badge on the current frame of a video, or else on its poster,
-	// and returns the result as an image URL. Cross-origin frames can't be read.
-	const drawBadgedFrame = async (video: HTMLVideoElement): Promise<string | undefined> => {
-		let source: HTMLImageElement | HTMLVideoElement = video
-		let width = video.videoWidth
-		let height = video.videoHeight
-		if (width === 0 || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
-			if (video.poster === '') {
-				return undefined
-			}
+	// Returns the current frame of a video as an image URL. Frames of
+	// cross-origin videos can't be read.
 
-			const poster = new Image()
-			poster.src = video.poster
-			try {
-				await poster.decode()
-			} catch {
-				return undefined
-			}
-
-			source = poster
-			width = poster.naturalWidth
-			height = poster.naturalHeight
+	const captureFrame = (video: HTMLVideoElement): string | undefined => {
+		if (video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
+			return undefined
 		}
 
 		const canvas = document.createElement('canvas')
-		canvas.width = width
-		canvas.height = height
+		canvas.width = video.videoWidth
+		canvas.height = video.videoHeight
 		const context = canvas.getContext('2d')
 		if (context === null) {
 			return undefined
 		}
 
-		context.drawImage(source, 0, 0, width, height)
-
-		const centerX = width / 2
-		const centerY = height / 2
-		const radius = Math.min(width, height) * 0.09
-		const circle = new Path2D()
-		circle.arc(centerX, centerY, radius, 0, 2 * Math.PI)
-		context.fillStyle = 'rgb(0 0 0 / 55%)'
-		context.fill(circle)
-
-		// A triangle pointing right, centered on its centroid
-		const triangleWidth = radius * 0.87
-		const left = centerX - triangleWidth / 3
-		const triangle = new Path2D()
-		triangle.moveTo(left, centerY - radius / 2)
-		triangle.lineTo(left, centerY + radius / 2)
-		triangle.lineTo(left + triangleWidth, centerY)
-		triangle.closePath()
-		context.fillStyle = 'white'
-		context.fill(triangle)
-
+		context.drawImage(video, 0, 0)
 		try {
 			return canvas.toDataURL('image/jpeg', 0.92)
 		} catch {
@@ -97,6 +57,7 @@ async function markMedia(
 		}
 	}
 
+	let linkedCount = 0
 	// In document order, so the last heading seen names the section of the media
 	let heading: Element | undefined
 	for (const element of content.querySelectorAll(`${headingSelector}, ${mediaSelector}`)) {
@@ -125,12 +86,13 @@ async function markMedia(
 		element.removeAttribute('controls')
 
 		if (element instanceof HTMLVideoElement) {
-			const poster = await drawBadgedFrame(element)
-			if (poster === undefined) {
-				result.videosWithoutBadgeCount += 1
-			} else {
-				// The poster shows until the video plays, which it doesn't on paper
-				element.setAttribute('poster', poster)
+			const frame = captureFrame(element)
+			if (frame !== undefined) {
+				element.setAttribute('poster', frame)
+			}
+
+			// The poster shows until the video plays, which it doesn't on paper
+			if (element.hasAttribute('poster')) {
 				element.setAttribute('preload', 'none')
 				element.removeAttribute('autoplay')
 			}
@@ -143,15 +105,16 @@ async function markMedia(
 			link.style.marginTop = getComputedStyle(element).marginTop
 			element.replaceWith(link)
 			link.append(element)
+			link.insertAdjacentHTML('beforeend', badge)
 			link.after(caption)
 		} else {
 			element.after(caption)
 		}
 
-		result.linkedCount += 1
+		linkedCount += 1
 	}
 
-	return result
+	return linkedCount
 }
 
 /**
@@ -159,19 +122,9 @@ async function markMedia(
  * which can't play on paper, to their section on the website.
  */
 async function linkMedia(page: Page): Promise<void> {
-	const { linkedCount, videosWithoutBadgeCount } = await page.evaluate(
-		markMedia,
-		SELECTORS.mainInfo,
-		CLASSNAMES,
-	)
+	const linkedCount = await page.evaluate(markMedia, SELECTORS.mainInfo, CLASSNAMES)
 	if (linkedCount > 0) {
 		log.info(`Linked ${linkedCount} media element(s) on ${page.url()} to the website.`)
-	}
-
-	if (videosWithoutBadgeCount > 0) {
-		log.warn(
-			`${videosWithoutBadgeCount} video(s) on ${page.url()} have no readable frame or poster, such as cross-origin videos, and print without a play badge.`,
-		)
 	}
 }
 

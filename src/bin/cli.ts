@@ -159,7 +159,7 @@ await yargsInstance
 				.option('media-links', {
 					default: defaults.mediaLinks,
 					describe:
-						'Links videos, audio, and embedded video players, which cannot play on paper, to their section on the website, and draws a play badge on the frame of each video. Use --no-media-links to disable it.',
+						'Links videos, audio, and embedded video players, which cannot play on paper, to their section on the website, and shows a play badge on each video. Use --no-media-links to disable it.',
 					type: 'boolean',
 				})
 				.option('notice', {

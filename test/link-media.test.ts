@@ -35,6 +35,7 @@ describe('linkMedia', () => {
 			<link rel="canonical" href="https://published.example/docs/page">
 			<div class="sl-markdown-content">
 				<video id="intro" controls autoplay muted></video>
+				<video id="poster" autoplay muted poster="https://docs.example/poster.jpg"></video>
 				<h2 id="first-section">First</h2>
 				<p>Text</p>
 				<video id="video" controls autoplay muted style="display: block; margin-top: 24px"></video>
@@ -86,7 +87,7 @@ describe('linkMedia', () => {
 								? `${caption.textContent} -> ${caption.querySelector('a')?.href}`
 								: undefined,
 							link: link?.matches('a.s2pdf-media')
-								? `${link.getAttribute('href')} ${link.style.marginTop}`
+								? `${link.getAttribute('href')} ${link.style.marginTop}${link.querySelector(':scope > svg.s2pdf-media-badge') ? ' with badge' : ''}`
 								: undefined,
 							poster: element.getAttribute('poster')?.slice(0, 23),
 						},
@@ -106,16 +107,23 @@ describe('linkMedia', () => {
 				attributes: 'autoplay',
 				caption:
 					'Video · Watch it on the website: published.example/docs/page -> https://published.example/docs/page',
-				link: 'https://published.example/docs/page 0px',
+				link: 'https://published.example/docs/page 0px with badge',
 				poster: undefined,
 			},
 			map: { attributes: '', caption: undefined, link: undefined, poster: undefined },
 			outside: { attributes: '', caption: undefined, link: undefined, poster: undefined },
+			poster: {
+				attributes: 'preload',
+				caption:
+					'Video · Watch it on the website: published.example/docs/page -> https://published.example/docs/page',
+				link: 'https://published.example/docs/page 0px with badge',
+				poster: 'https://docs.example/po',
+			},
 			video: {
 				attributes: 'preload',
 				caption:
 					'Video · Watch it on the website: published.example/docs/page#first-section -> https://published.example/docs/page#first-section',
-				link: 'https://published.example/docs/page#first-section 24px',
+				link: 'https://published.example/docs/page#first-section 24px with badge',
 				poster: 'data:image/jpeg;base64,',
 			},
 			youtube: {
@@ -127,8 +135,8 @@ describe('linkMedia', () => {
 			},
 		})
 
-		// The frame shows in the corner and the white play triangle in the center
-		const pixels = await page.$eval('#video', async (video) => {
+		// The poster holds the current frame of the video
+		const center = await page.$eval('#video', async (video) => {
 			const poster = new Image()
 			poster.src = video.getAttribute('poster') ?? ''
 			await poster.decode()
@@ -137,14 +145,11 @@ describe('linkMedia', () => {
 			canvas.height = poster.naturalHeight
 			const context = canvas.getContext('2d')
 			context?.drawImage(poster, 0, 0)
-			const sample = (x: number, y: number): number[] => [
-				...(context?.getImageData(x, y, 1, 1).data.slice(0, 3) ?? []),
-			]
-			return { center: sample(80, 45), corner: sample(4, 4) }
+			return [...(context?.getImageData(80, 45, 1, 1).data.slice(0, 3) ?? [])]
 		})
-		expect(pixels.center.every((channel) => channel > 230)).toBe(true)
-		expect(pixels.corner[0]).toBeLessThan(25)
-		expect(pixels.corner[1]).toBeGreaterThan(100)
+		expect(center[0]).toBeLessThan(25)
+		expect(center[1]).toBeGreaterThan(100)
+		expect(center[2]).toBeGreaterThan(100)
 	})
 
 	it('should link to the crawled page without a canonical URL', async () => {

@@ -167,6 +167,23 @@ export async function composeBody({
 									/* Stands in for the playback of media on paper */
 									.${CLASSNAMES.media} {
 										display: block;
+										position: relative;
+										anchor-scope: --s2pdf-video;
+									}
+
+									.${CLASSNAMES.media} > video {
+										anchor-name: --s2pdf-video;
+									}
+
+									/* Centered on the video, which can be narrower than the link around it */
+									.${CLASSNAMES.mediaBadge} {
+										position: absolute;
+										position-anchor: --s2pdf-video;
+										top: anchor(center);
+										left: anchor(center);
+										translate: -50% -50%;
+										width: clamp(1.5rem, calc(anchor-size(height) * 0.18), 4.5rem);
+										aspect-ratio: 1;
 									}
 
 									.${CLASSNAMES.mediaLink} {

@@ -8,6 +8,7 @@ export const CLASSNAMES = {
 	heading: 's2pdf-heading',
 	mainContainer: 's2pdf-container',
 	media: 's2pdf-media',
+	mediaBadge: 's2pdf-media-badge',
 	mediaLink: 's2pdf-media-link',
 	pageBreak: 's2pdf-pagebreak',
 	starlight: {
