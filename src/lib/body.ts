@@ -159,6 +159,11 @@ export async function composeBody({
 										break-after: avoid;
 									}
 
+									/* The empty boxes of sources let Chrome break a page right before the image of a picture, apart from the heading above it */
+									picture > source {
+										display: none;
+									}
+
 									.${CLASSNAMES.pageBreak} {
 										break-after: page;
 									}
