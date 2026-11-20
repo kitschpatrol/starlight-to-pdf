@@ -1,34 +1,9 @@
-import type { Page, PaperFormat } from 'puppeteer'
+import type { Page } from 'puppeteer'
+import type { PrintLayout } from './print-layout'
 import type { ResolvedOptions } from './types'
 import { CLASSNAMES } from './constants'
-import { ParsingError } from './errors'
 import { log } from './log'
-
-/** Widths of Puppeteer's paper formats in inches. */
-const PAPER_WIDTHS_INCHES = {
-	a0: 33.1,
-	a1: 23.4,
-	a2: 16.54,
-	a3: 11.7,
-	a4: 8.27,
-	a5: 5.83,
-	a6: 4.13,
-	ledger: 17,
-	legal: 8.5,
-	letter: 8.5,
-	tabloid: 11,
-} as const
-
-const CSS_PIXELS_PER_INCH = 96
-
-const PIXELS_PER_UNIT: Record<string, number> = {
-	cm: CSS_PIXELS_PER_INCH / 2.54,
-	in: CSS_PIXELS_PER_INCH,
-	mm: CSS_PIXELS_PER_INCH / 25.4,
-	pc: 16,
-	pt: CSS_PIXELS_PER_INCH / 72,
-	px: 1,
-}
+import { emulatePrintLayout, getPrintLayout } from './print-layout'
 
 /** Prefix for the generated named `@page` rules, one per print unit. */
 const PAGE_NAME_PREFIX = 's2pdf-page-'
@@ -40,39 +15,6 @@ const MIN_PAGE_HEIGHT_PIXELS = 96
 
 /** The PDF format caps page dimensions at 14,400 pt (200 in). */
 const MAX_PDF_PAGE_HEIGHT_PIXELS = 19_200
-
-const SPACING_TO_PIXELS_REGEX = /^(?<amount>\d+(?:\.\d+)?)(?<unit>mm|in|cm|px|pt|pc)?$/v
-
-function isKnownFormat(value: string): value is keyof typeof PAPER_WIDTHS_INCHES {
-	return Object.hasOwn(PAPER_WIDTHS_INCHES, value)
-}
-
-function formatWidthPixels(format: PaperFormat): number {
-	const key = format.toLowerCase()
-	if (!isKnownFormat(key)) {
-		throw new ParsingError(`\`dynamicPageHeight\` doesn't support the '${format}' paper format.`)
-	}
-
-	return PAPER_WIDTHS_INCHES[key] * CSS_PIXELS_PER_INCH
-}
-
-function spacingToPixels(value: number | string | undefined): number {
-	if (value === undefined) {
-		return 0
-	}
-
-	if (typeof value === 'number') {
-		return value
-	}
-
-	const match = SPACING_TO_PIXELS_REGEX.exec(value.trim())
-	const amount = match?.groups?.amount
-	if (amount === undefined) {
-		throw new ParsingError(`Couldn't convert spacing value to pixels: '${value}'.`)
-	}
-
-	return Number(amount) * (PIXELS_PER_UNIT[match?.groups?.unit ?? 'px'] ?? 1)
-}
 
 /**
  * Assigns a named `page` to every element of each print unit and returns the
@@ -135,7 +77,7 @@ export function buildPageRules(
 	{
 		pageWidthPixels,
 		verticalInsetPixels,
-	}: { pageWidthPixels: number; verticalInsetPixels: number },
+	}: Pick<PrintLayout, 'pageWidthPixels' | 'verticalInsetPixels'>,
 ): string {
 	const width = Math.round(pageWidthPixels)
 	const rules = unitHeightsPixels.map((height, index) => {
@@ -156,27 +98,10 @@ export function buildPageRules(
  * PDF must be recorded with `preferCSSPageSize` for the rules to apply.
  */
 async function applyDynamicPageHeight(page: Page, options: ResolvedOptions): Promise<void> {
-	const pageWidthPixels = formatWidthPixels(options.format)
-
-	const [paddingTop = '0', paddingRight = '0', paddingBottom = '0', paddingLeft = '0'] =
-		options.paddings?.split(' ') ?? []
-	const horizontalInsetPixels =
-		spacingToPixels(options.margins.left) +
-		spacingToPixels(options.margins.right) +
-		spacingToPixels(paddingLeft) +
-		spacingToPixels(paddingRight)
-	const verticalInsetPixels =
-		spacingToPixels(options.margins.top) +
-		spacingToPixels(options.margins.bottom) +
-		spacingToPixels(paddingTop) +
-		spacingToPixels(paddingBottom)
+	const layout = getPrintLayout(options)
 
 	// Measure at the print layout width so heights match the final rendering
-	await page.emulateMediaType('print')
-	await page.setViewport({
-		width: Math.max(1, Math.round(pageWidthPixels - horizontalInsetPixels)),
-		height: 1150,
-	})
+	await emulatePrintLayout(page, layout)
 
 	const unitHeightsPixels = await page.evaluate(
 		measureAndNameUnits,
@@ -186,7 +111,7 @@ async function applyDynamicPageHeight(page: Page, options: ResolvedOptions): Pro
 	)
 
 	const oversizedCount = unitHeightsPixels.filter(
-		(height) => height + verticalInsetPixels > MAX_PDF_PAGE_HEIGHT_PIXELS,
+		(height) => height + layout.verticalInsetPixels > MAX_PDF_PAGE_HEIGHT_PIXELS,
 	).length
 	if (oversizedCount > 0) {
 		log.warn(
@@ -196,9 +121,7 @@ async function applyDynamicPageHeight(page: Page, options: ResolvedOptions): Pro
 
 	log.info(`Dynamic page height: sized ${unitHeightsPixels.length} pages individually.`)
 
-	await page.addStyleTag({
-		content: buildPageRules(unitHeightsPixels, { pageWidthPixels, verticalInsetPixels }),
-	})
+	await page.addStyleTag({ content: buildPageRules(unitHeightsPixels, layout) })
 }
 
 export default applyDynamicPageHeight
