@@ -164,6 +164,15 @@ export async function composeBody({
 										display: none;
 									}
 
+									/* Avoids lone words on the last line of text and evens out the lines of wrapped headings, unless the site sets otherwise */
+									:where(p, li, dd, figcaption, blockquote) {
+										text-wrap: pretty;
+									}
+
+									:where(${HEADINGS_SELECTOR}) {
+										text-wrap: balance;
+									}
+
 									.${CLASSNAMES.pageBreak} {
 										break-after: page;
 									}
@@ -250,7 +259,6 @@ export async function composeBody({
 										font-size: min(var(--sl-text-6xl), 10vw);
 										line-height: 1.1;
 										color: var(--sl-color-white);
-										text-wrap: balance;
 									}
 
 									.${CLASSNAMES.cover}-subtitle {
