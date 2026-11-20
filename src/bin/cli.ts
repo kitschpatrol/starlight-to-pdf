@@ -156,6 +156,12 @@ await yargsInstance
 						'Sets margins for the PDF file. Provide a string with 4 values separated by space, reflecting the top, right, bottom and left margins respectively.',
 					type: 'string',
 				})
+				.option('media-links', {
+					default: defaults.mediaLinks,
+					describe:
+						'Links videos, audio, and embedded video players, which cannot play on paper, to their section on the website, and draws a play badge on the frame of each video. Use --no-media-links to disable it.',
+					type: 'boolean',
+				})
 				.option('notice', {
 					describe:
 						'Adds a back page with this notice, such as a confidentiality or copyright notice. Blank lines separate paragraphs.',
@@ -263,6 +269,7 @@ await yargsInstance
 					header: argv.header,
 					last: argv.last,
 					margins: argv.margins,
+					mediaLinks: argv.mediaLinks,
 					notice: argv.notice,
 					paddings: argv.paddings,
 					pageWaitUntil: argv.pageWaitUntil,

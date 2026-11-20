@@ -164,6 +164,20 @@ export async function composeBody({
 										display: none;
 									}
 
+									/* Stands in for the playback of media on paper */
+									.${CLASSNAMES.media} {
+										display: block;
+									}
+
+									.${CLASSNAMES.mediaLink} {
+										display: block;
+										margin: 0.5rem 0 var(--sl-content-gap-y, 1rem);
+										font-size: var(--sl-text-sm);
+										color: var(--sl-color-gray-3);
+										overflow-wrap: anywhere;
+										break-before: avoid;
+									}
+
 									/* Avoids lone words on the last line of text and evens out the lines of wrapped headings, unless the site sets otherwise */
 									:where(p, li, dd, figcaption, blockquote) {
 										text-wrap: pretty;

@@ -7,6 +7,8 @@ export const CLASSNAMES = {
 	cover: 's2pdf-cover',
 	heading: 's2pdf-heading',
 	mainContainer: 's2pdf-container',
+	media: 's2pdf-media',
+	mediaLink: 's2pdf-media-link',
 	pageBreak: 's2pdf-pagebreak',
 	starlight: {
 		headingWrapper: 'sl-heading-wrapper',

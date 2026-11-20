@@ -117,6 +117,13 @@ export type StarlightToPdfOptions = {
 	 */
 	margins?: PDFMargin | string | undefined
 	/**
+	 * Links videos, audio, and embedded YouTube and Vimeo players, which can't
+	 * play on paper, to their section on the website, and draws a play badge on
+	 * the frame of each video. Links use the canonical URL of the page, so they
+	 * point to the published site even when crawling a local server.
+	 */
+	mediaLinks?: boolean | undefined
+	/**
 	 * Adds a back page with this notice, such as a confidentiality or copyright
 	 * notice. Blank lines separate paragraphs.
 	 */
@@ -203,6 +210,7 @@ export const DEFAULT_STARLIGHT_TO_PDF_OPTIONS = {
 	format: 'letter',
 	header: false,
 	margins: DEFAULT_MARGINS,
+	mediaLinks: true,
 	pageWaitUntil: 'domcontentloaded',
 	pdfOutline: true,
 	printBg: false,
@@ -288,6 +296,7 @@ export function resolveOptions(options: StarlightToPdfOptions): ResolvedOptions 
 		format: options.format ?? defaults.format,
 		last: mapDefined(options.last, (value) => resolveLastUrl(value, url.origin)),
 		margins: typeof margins === 'string' ? parseMargins(margins) : margins,
+		mediaLinks: options.mediaLinks ?? defaults.mediaLinks,
 		paddings: mapDefined(options.paddings, (value) => validateSpacing(value, 'paddings')),
 		pageWaitUntil: options.pageWaitUntil ?? defaults.pageWaitUntil,
 		path: mapDefined(options.path, (value) => validatePath(value, 'path')),

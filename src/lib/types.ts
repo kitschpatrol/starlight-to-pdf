@@ -33,6 +33,7 @@ export type ResolvedOptions = {
 	header: boolean
 	last: string | undefined
 	margins: PDFMargin
+	mediaLinks: boolean
 	notice: string | undefined
 	paddings: string | undefined
 	pageWaitUntil: PuppeteerLifeCycleEvent

@@ -5,6 +5,7 @@ import errorCatcher from './error-catcher'
 import { ParsingError } from './errors'
 import getNextUrl from './get-next-url'
 import gotoWithRetry from './goto-with-retry'
+import linkMedia from './link-media'
 import { log } from './log'
 import { normalizePageUrl } from './options'
 import rasterizeCanvases from './rasterize-canvases'
@@ -175,9 +176,14 @@ async function parsePage({ internalLinks, page }: ParsePageParams): Promise<Pars
 
 async function processPageContent(
 	page: Page,
-	internalLinks: boolean,
+	{ internalLinks, mediaLinks }: { internalLinks: boolean; mediaLinks: boolean },
 ): Promise<ProcessPageContentReturn> {
 	await rasterizeCanvases(page)
+	// Before parsing, which rewrites the heading IDs that the links point to
+	if (mediaLinks) {
+		await linkMedia(page)
+	}
+
 	const parsedData = await parsePage({ internalLinks, page })
 
 	const contents: Contents = {
@@ -245,7 +251,10 @@ async function getAllContent({
 				contents,
 				html,
 				stylesheets: pageStylesheets,
-			} = await processPageContent(page, options.contentsLinks === 'internal')
+			} = await processPageContent(page, {
+				internalLinks: options.contentsLinks === 'internal',
+				mediaLinks: options.mediaLinks,
+			})
 			contentsData.add(contents)
 			accumulatedHtml += html
 			stylesheets = mergeStylesheets(stylesheets, pageStylesheets)
