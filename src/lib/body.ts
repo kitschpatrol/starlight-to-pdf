@@ -245,6 +245,11 @@ export async function composeBody({
 										font-size: var(--sl-text-sm);
 									}
 
+									/* Keeps lines of the small print to a comfortable length */
+									.${CLASSNAMES.backPage} > * {
+										max-width: 36em;
+									}
+
 									:is(.${CLASSNAMES.cover}, .${CLASSNAMES.backPage}) p {
 										margin: 0;
 									}
