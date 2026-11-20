@@ -3,16 +3,31 @@ import { SELECTORS } from './constants'
 import { log } from './log'
 
 /**
- * Replaces the canvases in the content with images of their pixels, and returns
- * how many canvases couldn't be read. Runs in the browser context.
+ * Replaces the canvases in the content, including those in open shadow roots,
+ * with images of their pixels, and returns how many canvases couldn't be read.
+ * Runs in the browser context.
  */
-function replaceCanvasesWithImages(canvasSelector: string): number {
-	let unreadableCount = 0
-	for (const canvas of document.querySelectorAll(canvasSelector)) {
-		if (!(canvas instanceof HTMLCanvasElement)) {
-			continue
+function replaceCanvasesWithImages(contentSelector: string): number {
+	const canvases: HTMLCanvasElement[] = []
+	const content = document.querySelector(contentSelector)
+	const pendingRoots: Array<Element | ShadowRoot> = content === null ? [] : [content]
+	let root = pendingRoots.pop()
+	while (root !== undefined) {
+		for (const element of root.querySelectorAll('*')) {
+			if (element instanceof HTMLCanvasElement) {
+				canvases.push(element)
+			}
+
+			if (element.shadowRoot) {
+				pendingRoots.push(element.shadowRoot)
+			}
 		}
 
+		root = pendingRoots.pop()
+	}
+
+	let unreadableCount = 0
+	for (const canvas of canvases) {
 		let source: string | undefined
 		try {
 			// WebGL canvases don't keep their pixels after drawing, and canvases
@@ -55,10 +70,7 @@ function replaceCanvasesWithImages(canvasSelector: string): number {
  * read stay and print blank.
  */
 async function rasterizeCanvases(page: Page): Promise<void> {
-	const unreadableCount = await page.evaluate(
-		replaceCanvasesWithImages,
-		`${SELECTORS.mainInfo} canvas`,
-	)
+	const unreadableCount = await page.evaluate(replaceCanvasesWithImages, SELECTORS.mainInfo)
 	if (unreadableCount > 0) {
 		log.warn(
 			`${unreadableCount} canvas(es) on ${page.url()} can't be read, such as WebGL canvases, and print blank.`,

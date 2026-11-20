@@ -118,7 +118,8 @@ export async function injectBody({
 	}
 
 	document.head.insertAdjacentHTML('beforeend', stylesheets.join(''))
-	document.body.innerHTML = body
+	// Unlike innerHTML, attaches the declarative shadow roots of the parsed pages
+	document.body.setHTMLUnsafe(body)
 
 	if (noPrintCss) {
 		document.head.querySelector(printStylesSelector)?.remove()

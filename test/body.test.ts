@@ -101,4 +101,16 @@ describe('injectBody', () => {
 		})
 		expect(await getHeadStylesheets(page)).toEqual(['<style>.docs {}</style>'])
 	})
+
+	it('should attach declarative shadow roots of the body', async () => {
+		const page = await openStartPage()
+		await page.evaluate(injectBody, {
+			body: '<div id="host"><template shadowrootmode="open"><p>Shadow</p></template></div>',
+			noPrintCss: false,
+			printStylesSelector: SELECTORS.starlightPrintStyles,
+			stylesheets: [],
+			stylesheetSelector: SELECTORS.stylesheet,
+		})
+		expect(await page.$eval('#host', (host) => host.shadowRoot?.textContent)).toBe('Shadow')
+	})
 })

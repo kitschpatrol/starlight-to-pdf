@@ -105,4 +105,30 @@ describe('getAllContent', () => {
 			true,
 		])
 	})
+
+	it('should capture open shadow roots with their styles', async () => {
+		const { htmlContent, page } = await parseFixturePage(`
+			<div id="host"></div>
+			<script>
+				const shadowRoot = document.querySelector('#host').attachShadow({ mode: 'open' })
+				shadowRoot.innerHTML = '<style>p { color: rgb(255, 0, 0); }</style><p>Shadow</p>'
+				const sheet = new CSSStyleSheet()
+				sheet.replaceSync('p { font-weight: 700; }')
+				shadowRoot.adoptedStyleSheets = [sheet]
+			</script>`)
+		await page.evaluate((html) => {
+			document.body.setHTMLUnsafe(html)
+		}, htmlContent)
+
+		const paragraph = await page.$eval('#host', (host) => {
+			const element = host.shadowRoot?.querySelector('p')
+			if (!element) {
+				return
+			}
+
+			const { color, fontWeight } = getComputedStyle(element)
+			return { color, fontWeight, text: element.textContent }
+		})
+		expect(paragraph).toEqual({ color: 'rgb(255, 0, 0)', fontWeight: '700', text: 'Shadow' })
+	})
 })

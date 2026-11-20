@@ -37,11 +37,56 @@ type ParsedData = {
 	}>
 }
 
+/**
+ * Serializes the element matching the selector like outerHTML, but includes its
+ * open shadow roots as declarative shadow DOM. Runs in the browser context.
+ */
+function serializeWithShadowRoots(selector: string): string {
+	const element = document.querySelector(selector)
+	if (element === null) {
+		return ''
+	}
+
+	const shadowRoots: ShadowRoot[] = []
+	const pendingRoots: Array<Element | ShadowRoot> = [element]
+	let root = pendingRoots.pop()
+	while (root !== undefined) {
+		for (const descendant of root.querySelectorAll('*')) {
+			if (!descendant.shadowRoot) {
+				continue
+			}
+
+			shadowRoots.push(descendant.shadowRoot)
+			pendingRoots.push(descendant.shadowRoot)
+		}
+
+		root = pendingRoots.pop()
+	}
+
+	if (shadowRoots.length === 0) {
+		return element.outerHTML
+	}
+
+	// Constructed stylesheets aren't serialized either. Appended style elements
+	// take their place in the cascade, after a shadow root's own styles.
+	for (const shadowRoot of shadowRoots) {
+		for (const sheet of shadowRoot.adoptedStyleSheets) {
+			const style = document.createElement('style')
+			style.textContent = Array.from(sheet.cssRules, (rule) => rule.cssText).join('\n')
+			shadowRoot.append(style)
+		}
+	}
+
+	const closingTag = `</${element.localName}>`
+	const openingTag = element.outerHTML.slice(0, -(element.getHTML().length + closingTag.length))
+	return `${openingTag}${element.getHTML({ shadowRoots })}${closingTag}`
+}
+
 async function parsePage({ internalLinks, page }: ParsePageParams): Promise<ParsedData> {
 	const currentLink = page.url()
 
-	const evaluatePage = async (link: string, isInternal: boolean) =>
-		page.evaluate(
+	const evaluatePage = async (link: string, isInternal: boolean): Promise<ParsedData> => {
+		const parsedData = await page.evaluate(
 			(linkArg, selectors, classnames, isInternalArg) => {
 				const { pathname } = new URL(linkArg)
 
@@ -99,7 +144,6 @@ async function parsePage({ internalLinks, page }: ParsePageParams): Promise<Pars
 						text: heading?.innerText ?? '',
 						url: isInternalArg ? `#${pathname}` : linkArg,
 					},
-					mainInfo: { html: mainInfo?.outerHTML ?? '' },
 					stylesheets,
 					subheadings,
 				}
@@ -109,6 +153,11 @@ async function parsePage({ internalLinks, page }: ParsePageParams): Promise<Pars
 			CLASSNAMES,
 			isInternal,
 		)
+
+		// Serialize after the changes above, such as opened details
+		const html = await page.evaluate(serializeWithShadowRoots, SELECTORS.mainInfo)
+		return { ...parsedData, mainInfo: { html } }
+	}
 
 	const [error, parsedData] = await errorCatcher(evaluatePage(currentLink, internalLinks))
 

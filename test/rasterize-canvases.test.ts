@@ -77,4 +77,21 @@ describe('rasterizeCanvases', () => {
 			style: 'width: 200px; max-width: 100%; height: auto;',
 		})
 	})
+
+	it('should replace canvases in open shadow roots of the content', async () => {
+		const page = await browser.newPage()
+		await page.setContent(`
+			<div class="sl-markdown-content"><div id="host"></div></div>
+			<script>
+				const canvas = document.createElement('canvas')
+				canvas.getContext('2d').fillRect(0, 0, 10, 10)
+				document.querySelector('#host').attachShadow({ mode: 'open' }).append(canvas)
+			</script>`)
+
+		await rasterizeCanvases(page)
+
+		expect(await page.$eval('#host', (host) => host.shadowRoot?.firstElementChild?.tagName)).toBe(
+			'IMG',
+		)
+	})
 })
