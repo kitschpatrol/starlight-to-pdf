@@ -9,7 +9,6 @@ import {
 	resolveOptions,
 	validateFileExtension,
 	validateFilename,
-	validateLength,
 	validateMilliseconds,
 	validateSpacing,
 } from '../src/lib/options'
@@ -27,7 +26,6 @@ describe('resolveOptions', () => {
 		expect(resolved.footer).toBe(false)
 		expect(resolved.pdfOutline).toBe(true)
 		expect(resolved.mediaLinks).toBe(true)
-		expect(resolved.fontSize).toBe('11pt')
 		expect(resolved.title).toBeUndefined()
 		expect(resolved.date).toBeUndefined()
 	})
@@ -139,18 +137,6 @@ describe('validateSpacing', () => {
 
 	it('should reject invalid units', () => {
 		expect(() => validateSpacing('1cm 1cm 1cm 1banana', 'margins')).toThrow(ValidationError)
-	})
-})
-
-describe('validateLength', () => {
-	it('should accept a length with a unit', () => {
-		expect(validateLength('10.5pt', 'fontSize')).toBe('10.5pt')
-	})
-
-	it('should reject lengths without a unit or of zero or less', () => {
-		for (const value of ['11', '0pt', 'large', '-1pt', '11 pt']) {
-			expect(() => validateLength(value, 'fontSize')).toThrow(ValidationError)
-		}
 	})
 })
 

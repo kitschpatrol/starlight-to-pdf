@@ -133,12 +133,6 @@ await yargsInstance
 						'Adds a footer with the revision, date, and page numbers to every page except the cover and back pages, and the title without a header. Needs bottom margins to print in.',
 					type: 'boolean',
 				})
-				.option('font-size', {
-					default: defaults.fontSize,
-					describe:
-						"Size of the body text, such as '11pt' or '16px'. Starlight sizes text and spacing relative to it, so headings scale along.",
-					type: 'string',
-				})
 				.option('format', {
 					choices: PAPER_FORMATS,
 					default: defaults.format,
@@ -272,7 +266,6 @@ await yargsInstance
 					exclude: argv.exclude,
 					filename: argv.filename,
 					followingHtml: argv.followingHtml,
-					fontSize: argv.fontSize,
 					footer: argv.footer,
 					format: argv.format,
 					header: argv.header,

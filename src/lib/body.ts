@@ -153,11 +153,6 @@ export async function composeBody({
 
 	const body = `<base href="${baseOrigin}" />
 								<style>
-									/* Starlight sizes text and spacing relative to the root */
-									:root {
-										font-size: ${options.fontSize};
-									}
-
 									/* Lets the content span the page, as Starlight's print styles do for its page layout, which the document leaves out */
 									.${CLASSNAMES.mainContainer} {
 										--sl-content-width: 100%;

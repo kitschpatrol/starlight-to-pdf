@@ -12,7 +12,6 @@ const INVALID_FILENAME_CHARS = /[<>:"\/\\\|?*]/v
 const RESERVED_NAMES = /^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])$/iv
 const HTTP_PROTOCOL_REGEX = /^https?:\/\//v
 const SPACING_REGEX = /^\d+(?:\.\d+)?(?:mm|in|cm|px|pt|pc)?$/v
-const LENGTH_REGEX = /^(?<amount>\d+(?:\.\d+)?)(?:mm|in|cm|px|pt|pc)$/v
 
 /**
  * Options for `starlightToPdf`. Only `url` is required; all other fields fall
@@ -91,13 +90,6 @@ export type StarlightToPdfOptions = {
 	 * file. Its behavior is similar to the `precedingHtml` option.
 	 */
 	followingHtml?: string | undefined
-	/**
-	 * Size of the body text in the PDF, as a length such as `11pt` or `16px`.
-	 * Starlight sizes text and spacing relative to it, so headings scale along.
-	 * Defaults to `11pt`, a common size in print, where the `16px` that Starlight
-	 * sets for screens reads large.
-	 */
-	fontSize?: string | undefined
 	/**
 	 * Adds a footer with the revision, date, and page numbers to every page
 	 * except the cover and back pages, and the title without a header. Needs
@@ -217,7 +209,6 @@ export const DEFAULT_STARLIGHT_TO_PDF_OPTIONS = {
 	cover: false,
 	cssPageSize: false,
 	dynamicPageHeight: false,
-	fontSize: '11pt',
 	footer: false,
 	format: 'letter',
 	header: false,
@@ -305,7 +296,6 @@ export function resolveOptions(options: StarlightToPdfOptions): ResolvedOptions 
 		followingHtml: mapDefined(options.followingHtml, (value) =>
 			validateFileExtension(value, 'html', 'followingHtml'),
 		),
-		fontSize: validateLength(options.fontSize ?? defaults.fontSize, 'fontSize'),
 		format: options.format ?? defaults.format,
 		last: mapDefined(options.last, (value) => resolveLastUrl(value, url.origin)),
 		margins: typeof margins === 'string' ? parseMargins(margins) : margins,
@@ -409,21 +399,6 @@ export function validateSpacing(value: string, optionName: string): string {
 		if (!SPACING_REGEX.test(part)) {
 			throw new ValidationError(`Invalid \`${optionName}\` value provided: '${part}'.`)
 		}
-	}
-
-	return value
-}
-
-/**
- * Validates a single length greater than zero with a unit, such as `11pt`, as
- * used by the `fontSize` option. Returns the value unchanged.
- */
-export function validateLength(value: string, optionName: string): string {
-	const amount = Number(LENGTH_REGEX.exec(value)?.groups?.amount)
-	if (Number.isNaN(amount) || amount <= 0) {
-		throw new ValidationError(
-			`Invalid \`${optionName}\` value provided: '${value}'. Use a length with a unit, such as '11pt'.`,
-		)
 	}
 
 	return value
