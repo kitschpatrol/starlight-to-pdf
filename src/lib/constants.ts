@@ -21,6 +21,12 @@ export const CLASSNAMES = {
  */
 export const PAGE_TITLE_ATTRIBUTE = 'data-s2pdf-title'
 
+/**
+ * Headings in the assembled document, including page titles and Starlight's
+ * heading wrappers, which print on the page of the content that follows them.
+ */
+export const HEADINGS_SELECTOR = `:is(h1, h2, h3, h4, h5, h6, .${CLASSNAMES.heading}, .${CLASSNAMES.starlight.headingWrapper})`
+
 /** CSS selectors for the Starlight page elements the crawler relies on. */
 export const SELECTORS = {
 	heading: '*:has(> h1#_top)',

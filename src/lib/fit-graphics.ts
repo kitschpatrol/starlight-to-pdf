@@ -1,5 +1,6 @@
 import type { Page } from 'puppeteer'
 import type { ResolvedOptions } from './types'
+import { HEADINGS_SELECTOR } from './constants'
 import { log } from './log'
 import { emulatePrintLayout, getPrintLayout } from './print-layout'
 
@@ -10,10 +11,12 @@ const FIT_BUFFER_PIXELS = 2
  * Caps the height of graphics taller than the space a page offers them and
  * returns how many were capped. A graphic alone in a figure gets the page
  * height minus the rest of the figure, so the graphic prints together with its
- * caption, unless the rest of the figure takes more than half a page. Runs in
- * the browser context.
+ * caption, unless the rest of the figure takes more than half a page. The
+ * headings right before a graphic also take their height from it, unless they
+ * take more than a quarter of a page, so they print on the page of the graphic
+ * instead of alone. Runs in the browser context.
  */
-function capGraphicHeights(maxHeight: number): number {
+function capGraphicHeights(maxHeight: number, headingsSelector: string): number {
 	const graphicSelector = 'img, video, canvas, svg'
 
 	// Inline SVGs only scale with a viewBox, and nested SVGs scale with their
@@ -26,10 +29,38 @@ function capGraphicHeights(maxHeight: number): number {
 				element.hasAttribute('viewBox'))) &&
 		element.getClientRects().length > 0
 
+	// Finds the first of the headings that directly precede the element in the
+	// flow, which includes the headings before its ancestors when it comes first
+	const getFirstLeadingHeading = (element: Element): Element | undefined => {
+		let firstHeading: Element | undefined
+		let current: Element | undefined = element
+		while (current !== undefined) {
+			const previous = current.previousElementSibling ?? undefined
+			if (previous === undefined) {
+				current = current.parentElement ?? undefined
+				continue
+			}
+
+			const { width, height } = previous.getBoundingClientRect()
+			// Empty and hidden elements, such as the sources of a picture, take no space
+			if (height > 0 && width > 0) {
+				if (!previous.matches(headingsSelector)) {
+					break
+				}
+
+				firstHeading = previous
+			}
+
+			current = previous
+		}
+
+		return firstHeading
+	}
+
 	let cappedCount = 0
 	const graphics = [...document.body.querySelectorAll(graphicSelector)].filter(isScalableGraphic)
 	for (const graphic of graphics) {
-		const { height } = graphic.getBoundingClientRect()
+		const { height, top } = graphic.getBoundingClientRect()
 		const figure = graphic.closest('figure')
 		const isOnlyFigureGraphic =
 			figure !== null &&
@@ -37,8 +68,14 @@ function capGraphicHeights(maxHeight: number): number {
 		const surroundingHeight = isOnlyFigureGraphic
 			? figure.getBoundingClientRect().height - height
 			: 0
+		const firstHeading = getFirstLeadingHeading(graphic)
+		// Layouts that reorder content can place the headings beside or below
+		const headingsHeight =
+			firstHeading === undefined ? 0 : Math.max(0, top - firstHeading.getBoundingClientRect().top)
 		const availableHeight =
-			surroundingHeight < maxHeight / 2 ? maxHeight - surroundingHeight : maxHeight
+			maxHeight -
+			(surroundingHeight < maxHeight / 2 ? surroundingHeight : 0) -
+			(headingsHeight < maxHeight / 4 ? headingsHeight : 0)
 
 		if (height <= availableHeight) {
 			continue
@@ -64,6 +101,7 @@ async function fitGraphicsToPage(page: Page, options: ResolvedOptions): Promise<
 	const cappedCount = await page.evaluate(
 		capGraphicHeights,
 		layout.contentHeightPixels - FIT_BUFFER_PIXELS,
+		HEADINGS_SELECTOR,
 	)
 	if (cappedCount > 0) {
 		log.info(`Scaled down ${cappedCount} graphic(s) to fit on a page.`)

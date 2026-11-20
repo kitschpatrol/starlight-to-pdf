@@ -89,6 +89,37 @@ describe('fitGraphicsToPage', () => {
 		}
 	})
 
+	it('should leave room on the page for the headings right before a graphic', async () => {
+		const page = await fitContent(`
+			<div class="s2pdf-heading"><h1 style="height: 50px; margin: 0">Page title</h1></div>
+			<div class="sl-markdown-content">
+				<div class="sl-heading-wrapper"><h2 style="height: 30px; margin: 0">Section</h2></div>
+				<p style="margin: 0">
+					<picture>
+						<source srcset="${TALL_IMAGE}" media="(min-width: 1px)">
+						<img src="${TALL_IMAGE}" style="display: block; width: 100%">
+					</picture>
+				</p>
+			</div>`)
+		const imageHeight = await getHeight(page, 'img')
+		expect(imageHeight).toBeLessThanOrEqual(contentHeightPixels - 80)
+		expect(imageHeight).toBeGreaterThan(contentHeightPixels - 85)
+	})
+
+	it('should not leave room for headings that are not right before a graphic or are long', async () => {
+		const page = await fitContent(`
+			<h2 style="height: 30px; margin: 0">Section</h2>
+			<p style="margin: 0">Introduction</p>
+			<img class="after-text" src="${TALL_IMAGE}" style="display: block; width: 100%">
+			<h2 style="height: ${contentHeightPixels * 0.3}px; margin: 0">Long heading</h2>
+			<img class="after-long-heading" src="${TALL_IMAGE}" style="display: block; width: 100%">`)
+		for (const selector of ['.after-text', '.after-long-heading']) {
+			const height = await getHeight(page, selector)
+			expect(height).toBeLessThanOrEqual(contentHeightPixels)
+			expect(height).toBeGreaterThan(contentHeightPixels - 5)
+		}
+	})
+
 	it('should skip SVGs without a viewBox, nested SVGs, and hidden graphics', async () => {
 		const page = await fitContent(`
 			<svg class="fixed" width="100" height="2000"></svg>
