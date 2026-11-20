@@ -57,7 +57,7 @@ describe('rasterizeCanvases', () => {
 			await globalThis.tainted
 		})
 
-		await rasterizeCanvases(page)
+		expect(await rasterizeCanvases(page)).toBe(2)
 
 		const tags = await page.$$eval('[id]', (elements) =>
 			elements.map((element) => `${element.id}: ${element.tagName.toLowerCase()}`),
@@ -76,6 +76,20 @@ describe('rasterizeCanvases', () => {
 			source: 'data:image/png;base64,',
 			style: 'width: 200px; max-width: 100%; height: auto;',
 		})
+	})
+
+	it('should not count unreadable canvases that print styles hide', async () => {
+		const page = await browser.newPage()
+		await page.setContent(`
+			<style>@media print { .demo { display: none; } }</style>
+			<div class="sl-markdown-content">
+				<div class="demo"><canvas id="demo"></canvas></div>
+			</div>
+			<script>document.querySelector('#demo').getContext('bitmaprenderer')</script>`)
+
+		expect(await rasterizeCanvases(page)).toBe(0)
+		// The page returns to its screen styles
+		expect(await page.evaluate(() => matchMedia('print').matches)).toBe(false)
 	})
 
 	it('should replace canvases in open shadow roots of the content', async () => {

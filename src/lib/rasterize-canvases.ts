@@ -66,16 +66,32 @@ function replaceCanvasesWithImages(contentSelector: string): number {
 
 /**
  * Replaces the canvases in the current page's content with images, since canvas
- * pixels don't survive serializing the page to HTML. Canvases that can't be
- * read stay and print blank.
+ * pixels don't survive serializing the page to HTML, and returns how many
+ * canvases print blank. Canvases that can't be read stay, and print blank
+ * unless print styles hide them, such as a demo that prints a screenshot in its
+ * place.
  */
-async function rasterizeCanvases(page: Page): Promise<void> {
+async function rasterizeCanvases(page: Page): Promise<number> {
 	const unreadableCount = await page.evaluate(replaceCanvasesWithImages, SELECTORS.mainInfo)
-	if (unreadableCount > 0) {
+	if (unreadableCount === 0) {
+		return 0
+	}
+
+	// The readable canvases are images by now, so the canvases left can't be read
+	await page.emulateMediaType('print')
+	const blankCount = await page.$$eval(
+		`${SELECTORS.mainInfo} >>> canvas`,
+		(canvases) => canvases.filter((canvas) => canvas.getClientRects().length > 0).length,
+	)
+	await page.emulateMediaType()
+
+	if (blankCount > 0) {
 		log.warn(
-			`${unreadableCount} canvas(es) on ${page.url()} can't be read, such as WebGL canvases, and print blank.`,
+			`${blankCount} canvas(es) on ${page.url()} can't be read, such as WebGL canvases, and print blank.`,
 		)
 	}
+
+	return blankCount
 }
 
 export default rasterizeCanvases
