@@ -362,6 +362,12 @@ export async function composeBody({
 										font-size: min(var(--sl-text-2xl), 7.5vw);
 									}
 
+									/* Evens out the lines of long titles and subtitles, whatever wrapping the site gives headings and paragraphs */
+									.${CLASSNAMES.cover}-title h1,
+									.${CLASSNAMES.cover}-subtitle {
+										text-wrap: balance;
+									}
+
 									.${CLASSNAMES.backPage} strong {
 										color: var(--sl-color-white);
 									}

@@ -287,6 +287,20 @@ describe('injectBody', () => {
 		expect(layout.scrollHeight).toBe(layout.clientHeight)
 	})
 
+	it('should balance the lines of the cover title and subtitle whatever wrapping the site sets', async () => {
+		const page = await openStartPage()
+		await injectCover(
+			page,
+			{ subtitle: 'Library documentation', title: 'Implementation Guide' },
+			'<style>h1, p { text-wrap: pretty; }</style>',
+		)
+
+		const wrapping = await page.$$eval('.s2pdf-cover h1, .s2pdf-cover-subtitle', (elements) =>
+			elements.map((element) => getComputedStyle(element).getPropertyValue('text-wrap-style')),
+		)
+		expect(wrapping).toEqual(['balance', 'balance'])
+	})
+
 	it('should leave the layout of custom covers to them', async () => {
 		const page = await openStartPage()
 		await injectCover(
