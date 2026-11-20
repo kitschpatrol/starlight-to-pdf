@@ -56,4 +56,11 @@ export type GetAllContentParams = {
 }
 
 /** Accumulated crawl results. */
-export type GetAllContentReturn = Pick<GetAllContentParams, 'contentsData' | 'htmlContent'>
+export type GetAllContentReturn = Pick<GetAllContentParams, 'contentsData' | 'htmlContent'> & {
+	/**
+	 * Markup of the stylesheets of all parsed pages, deduplicated and in cascade
+	 * order. Astro bundles CSS per page, so styles for components used only on
+	 * some pages are missing from any single page.
+	 */
+	stylesheets: string[]
+}

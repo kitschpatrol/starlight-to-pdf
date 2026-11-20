@@ -18,6 +18,7 @@ export const SELECTORS = {
 	nextLink: "a[rel='next']",
 	sidebarLink: 'nav.sidebar a[href]',
 	starlightPrintStyles: 'link[media="print"]',
+	stylesheet: 'link[rel~="stylesheet"], style',
 	subheading: `.${CLASSNAMES.starlight.markdownContent} h2`,
 	topicLink: 'nav.sidebar .starlight-sidebar-topics a[href]',
 	topicsList: '.starlight-sidebar-topics',

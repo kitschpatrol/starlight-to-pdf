@@ -87,7 +87,7 @@ export async function starlightToPdf(
 
 		log.info(`Docs content was found. Starting page: ${contentStartUrl.href}`)
 
-		const { contentsData, htmlContent } = await getAllContent({
+		const { contentsData, htmlContent, stylesheets } = await getAllContent({
 			contentsData: new Set(),
 			htmlContent: '',
 			options: resolved,
@@ -106,12 +106,17 @@ export async function starlightToPdf(
 		await page.goto(contentStartUrl.href, {
 			waitUntil: 'networkidle2',
 		})
-		await page.evaluate(
-			injectBody,
+		const failedStylesheetUrls = await page.evaluate(injectBody, {
 			body,
-			!resolved.starlightPrintCss,
-			SELECTORS.starlightPrintStyles,
-		)
+			noPrintCss: !resolved.starlightPrintCss,
+			printStylesSelector: SELECTORS.starlightPrintStyles,
+			stylesheets,
+			stylesheetSelector: SELECTORS.stylesheet,
+		})
+		for (const url of failedStylesheetUrls) {
+			log.warn(`Stylesheet failed to load, the PDF may lack some styles: ${url}`)
+		}
+
 		await scrollPageToBottom(page, {
 			delay: resolved.scrollDelay,
 			size: 1100,

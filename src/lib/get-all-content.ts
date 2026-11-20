@@ -11,6 +11,7 @@ import { normalizePageUrl } from './options'
 type ProcessPageContentReturn = {
 	contents: Contents
 	html: string
+	stylesheets: string[]
 }
 
 type ParsePageParams = {
@@ -27,6 +28,8 @@ type ParsedData = {
 	mainInfo: {
 		html: string
 	}
+	/** Markup of the page's stylesheets outside the parsed content. */
+	stylesheets: string[]
 	subheadings: Array<{
 		heading: string
 		url: string
@@ -65,6 +68,21 @@ async function parsePage({ internalLinks, page }: ParsePageParams): Promise<Pars
 					},
 				)
 
+				// Stylesheets inside the parsed elements travel with their markup
+				const stylesheets = [...document.querySelectorAll(selectors.stylesheet)]
+					.filter((element) => !heading?.contains(element) && !mainInfo?.contains(element))
+					.map((element) => {
+						const clone = element.cloneNode()
+						if (!(clone instanceof HTMLLinkElement)) {
+							return element.outerHTML
+						}
+
+						// Absolute URLs resolve from the assembled document and deduplicate
+						// links written relative to pages at different depths
+						clone.setAttribute('href', clone.href)
+						return clone.outerHTML
+					})
+
 				return {
 					heading: {
 						html: heading?.outerHTML ?? '',
@@ -73,6 +91,7 @@ async function parsePage({ internalLinks, page }: ParsePageParams): Promise<Pars
 						url: isInternalArg ? `#${pathname}` : linkArg,
 					},
 					mainInfo: { html: mainInfo?.outerHTML ?? '' },
+					stylesheets,
 					subheadings,
 				}
 			},
@@ -107,7 +126,30 @@ async function processPageContent(
 
 	const html = parsedData.heading.html + parsedData.mainInfo.html
 
-	return { contents, html }
+	return { contents, html, stylesheets: parsedData.stylesheets }
+}
+
+/**
+ * Adds a page's stylesheets to the stylesheets accumulated from previous pages,
+ * skipping duplicates. Each new stylesheet is placed right after the stylesheet
+ * preceding it on its page, so the merged cascade order matches the order on
+ * every page as closely as possible.
+ */
+export function mergeStylesheets(accumulated: string[], pageStylesheets: string[]): string[] {
+	const merged = [...accumulated]
+	let insertIndex = 0
+
+	for (const stylesheet of pageStylesheets) {
+		const index = merged.indexOf(stylesheet)
+		if (index === -1) {
+			merged.splice(insertIndex, 0, stylesheet)
+			insertIndex += 1
+		} else {
+			insertIndex = Math.max(insertIndex, index + 1)
+		}
+	}
+
+	return merged
 }
 
 /**
@@ -123,6 +165,7 @@ async function getAllContent({
 }: GetAllContentParams): Promise<GetAllContentReturn> {
 	const { exclude, last } = options
 	let accumulatedHtml = htmlContent
+	let stylesheets: string[] = []
 	const visitedUrls = new Set<string>()
 
 	for (;;) {
@@ -136,12 +179,14 @@ async function getAllContent({
 			log.info(`Page excluded: ${currentUrl}`)
 		} else {
 			log.info(`Parsing page: ${currentUrl}`)
-			const { contents, html } = await processPageContent(
-				page,
-				options.contentsLinks === 'internal',
-			)
+			const {
+				contents,
+				html,
+				stylesheets: pageStylesheets,
+			} = await processPageContent(page, options.contentsLinks === 'internal')
 			contentsData.add(contents)
 			accumulatedHtml += html
+			stylesheets = mergeStylesheets(stylesheets, pageStylesheets)
 		}
 
 		const nextUrl = urlQueue ? urlQueue.shift() : await getNextUrl(page)
@@ -167,6 +212,7 @@ async function getAllContent({
 	return {
 		contentsData,
 		htmlContent: accumulatedHtml,
+		stylesheets,
 	}
 }
 

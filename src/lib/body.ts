@@ -35,7 +35,7 @@ function createContents(contentData: Contents[], options: ResolvedOptions): stri
 					</div>`
 }
 
-type ComposeBodyParams = GetAllContentReturn & {
+type ComposeBodyParams = Omit<GetAllContentReturn, 'stylesheets'> & {
 	baseOrigin: string
 	options: ResolvedOptions
 }
@@ -86,19 +86,61 @@ export async function composeBody({
 	return body
 }
 
-/**
- * Replaces the page body with the assembled HTML. Runs in the browser context.
- */
-export function injectBody(result: string, noPrintCss: boolean, selector: string) {
-	const { body } = document
-	body.innerHTML = result
+type InjectBodyParams = {
+	body: string
+	noPrintCss: boolean
+	printStylesSelector: string
+	stylesheets: string[]
+	stylesheetSelector: string
+}
 
-	if (noPrintCss) {
-		const printStyles = document.head.querySelector(selector)
-		if (printStyles) {
-			printStyles.remove()
-		}
+/**
+ * Replaces the page body with the assembled HTML and the head's stylesheets
+ * with the stylesheets of all parsed pages, then waits for linked stylesheets
+ * to load. Returns the URLs of stylesheets that failed to load. Runs in the
+ * browser context.
+ */
+export async function injectBody({
+	body,
+	noPrintCss,
+	printStylesSelector,
+	stylesheets,
+	stylesheetSelector,
+}: InjectBodyParams): Promise<string[]> {
+	for (const element of document.head.querySelectorAll(stylesheetSelector)) {
+		element.remove()
 	}
 
-	return body.getHTML()
+	document.head.insertAdjacentHTML('beforeend', stylesheets.join(''))
+	document.body.innerHTML = body
+
+	if (noPrintCss) {
+		document.head.querySelector(printStylesSelector)?.remove()
+	}
+
+	// Browsers never fetch disabled, href-less, or non-CSS links, so those
+	// never fire a load or error event
+	const pendingLinks = [...document.querySelectorAll(stylesheetSelector)].filter(
+		(element) =>
+			element instanceof HTMLLinkElement &&
+			element.sheet === null &&
+			!element.disabled &&
+			(element.getAttribute('href') ?? '') !== '' &&
+			['', 'text/css'].includes(element.type.toLowerCase()),
+	)
+	const failedUrls = await Promise.all(
+		pendingLinks.map(
+			async (link) =>
+				new Promise<string | undefined>((resolve) => {
+					link.addEventListener('load', () => {
+						resolve(undefined)
+					})
+					link.addEventListener('error', () => {
+						resolve(link.getAttribute('href') ?? '')
+					})
+				}),
+		),
+	)
+
+	return failedUrls.filter((url) => url !== undefined)
 }
