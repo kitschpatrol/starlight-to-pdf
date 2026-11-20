@@ -4,6 +4,8 @@ import type { PaperFormat, PuppeteerLifeCycleEvent } from 'puppeteer'
 export const CLASSNAMES = {
 	backPage: 's2pdf-back-page',
 	contents: 's2pdf-contents',
+	contentsPage: 's2pdf-contents-page',
+	contentsTitle: 's2pdf-contents-title',
 	cover: 's2pdf-cover',
 	heading: 's2pdf-heading',
 	mainContainer: 's2pdf-container',

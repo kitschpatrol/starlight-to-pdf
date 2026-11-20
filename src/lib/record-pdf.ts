@@ -2,10 +2,23 @@ import type { Page, PDFOptions } from 'puppeteer'
 import { mkdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import type { ResolvedOptions } from './types'
+import { fillContentsPageNumbers } from './contents-page-numbers'
 import errorCatcher from './error-catcher'
 import { ParsingError } from './errors'
 import { log } from './log'
 import { resolveLinkDestinations } from './resolve-link-destinations'
+
+/** Renders the page to a PDF in memory, failing with the path it was meant for. */
+async function renderPdf(page: Page, pdfOptions: PDFOptions, pdfPath: string): Promise<Uint8Array> {
+	const [error, pdf] = await errorCatcher(page.pdf(pdfOptions))
+	if (error) {
+		throw new ParsingError(`PDF generation failed. Target file: ${pdfPath}.`, {
+			originalErrorMessage: error.message,
+		})
+	}
+
+	return pdf
+}
 
 type RecordPdfParams = {
 	hostname: string
@@ -45,12 +58,14 @@ async function recordPdf({ hostname, options, page }: RecordPdfParams): Promise<
 		timeout: options.timeout,
 	}
 
-	const [error, chromePdf] = await errorCatcher(page.pdf(pdfOptions))
+	let chromePdf = await renderPdf(page, pdfOptions, pdfPath)
 
-	if (error) {
-		throw new ParsingError(`PDF generation failed. Target file: ${pdfPath}.`, {
-			originalErrorMessage: error.message,
-		})
+	// CSS can't number the pages of link targets in Chrome, so the first
+	// rendering tells which page each entry of the table of contents starts on
+	const pageNumberCount = await fillContentsPageNumbers(page, chromePdf)
+	if (pageNumberCount > 0) {
+		log.info(`Numbered ${pageNumberCount} entries of the table of contents. Rendering again.`)
+		chromePdf = await renderPdf(page, pdfOptions, pdfPath)
 	}
 
 	const { linkCount, pdf } = resolveLinkDestinations(chromePdf)

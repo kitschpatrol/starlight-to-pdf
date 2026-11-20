@@ -41,12 +41,12 @@ export type StarlightToPdfOptions = {
 	 * paragraphs, and line breaks are kept.
 	 */
 	contact?: string | undefined
-	/** Generate a table of contents in the PDF. */
+	/** Generate a table of contents with page numbers in the PDF. */
 	contents?: boolean | undefined
 	/**
 	 * The type of links in the generated table of contents: `'internal'` for
 	 * links that navigate within the PDF file or `'external'` for links that
-	 * point to the documentation website.
+	 * point to the documentation website, which leaves out the page numbers.
 	 */
 	contentsLinks?: 'external' | 'internal' | undefined
 	/** Customizes the generated table of contents name in the PDF. */

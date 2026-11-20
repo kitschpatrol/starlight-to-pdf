@@ -29,9 +29,20 @@ describe('composeBody', () => {
 			{ contentsName: 'Q&A' },
 			new Set([{ heading: 'Use <Card> & <Tabs>', url: '#/use/' }]),
 		)
-		expect(body).toContain('<a href="#/use/">Use &lt;Card&gt; &amp; &lt;Tabs&gt;</a>')
+		expect(body).toContain(
+			'<a href="#/use/"><span class="s2pdf-contents-title">Use &lt;Card&gt; &amp; &lt;Tabs&gt;</span><span class="s2pdf-contents-page"></span></a>',
+		)
 		expect(body).toContain('<h1>Q&amp;A</h1>')
 		expect(body).toContain('data-s2pdf-title="Q&amp;A"')
+	})
+
+	it('should leave out page numbers when the table of contents links to the website', async () => {
+		const body = await compose(
+			{ contentsLinks: 'external' },
+			new Set([{ heading: 'Use', url: 'https://docs.example/use/' }]),
+		)
+		expect(body).toContain('<span class="s2pdf-contents-title">Use</span></a>')
+		expect(body).not.toContain('<span class="s2pdf-contents-page">')
 	})
 
 	it('should leave out the cover and back pages by default', async () => {

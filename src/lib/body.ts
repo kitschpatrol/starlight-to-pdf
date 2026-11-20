@@ -82,13 +82,19 @@ function createBackPage(document: DocumentInfo, options: ResolvedOptions): strin
 					</section>`
 }
 
-function composeListElement(contentData: Contents[]): string {
+/**
+ * Composes the nested list of the table of contents. With page numbers, each
+ * entry gets an empty element that the page number fills in after a first
+ * rendering of the PDF.
+ */
+function composeListElement(contentData: Contents[], withPageNumbers: boolean): string {
 	let contentsHtml = ''
+	const pageNumber = withPageNumbers ? `<span class="${CLASSNAMES.contentsPage}"></span>` : ''
 
 	for (const value of contentData) {
-		contentsHtml += `<li><a href="${escapeHtml(value.url)}">${escapeHtml(value.heading)}</a>`
+		contentsHtml += `<li><a href="${escapeHtml(value.url)}"><span class="${CLASSNAMES.contentsTitle}">${escapeHtml(value.heading)}</span>${pageNumber}</a>`
 		if (value.children) {
-			contentsHtml += composeListElement(value.children)
+			contentsHtml += composeListElement(value.children, withPageNumbers)
 		}
 
 		contentsHtml += `</li>`
@@ -98,7 +104,8 @@ function composeListElement(contentData: Contents[]): string {
 }
 
 function createContents(contentData: Contents[], options: ResolvedOptions): string {
-	const list = composeListElement(contentData)
+	// Page numbers come from the destinations of links within the PDF
+	const list = composeListElement(contentData, options.contentsLinks === 'internal')
 	const defaultContentsName = 'Contents'
 	const contentsName = options.contentsName ?? defaultContentsName
 
@@ -257,14 +264,29 @@ export async function composeBody({
 										color: var(--sl-color-gray-2);
 									}
 
+									/* Page numbers line up at the end of the column, on the last line of their entry */
 									.${CLASSNAMES.contents} a {
+										display: flex;
+										gap: 1em;
+										align-items: flex-end;
 										color: inherit;
 										text-decoration: none;
 									}
 
+									.${CLASSNAMES.contentsTitle} {
+										flex: 1;
+									}
+
+									/* A fixed width keeps the entries the same before and after the numbers fill in */
+									.${CLASSNAMES.contentsPage} {
+										flex: none;
+										width: 3ch;
+										text-align: end;
+										font-variant-numeric: tabular-nums;
+									}
+
 									/* Keeps each page entry with the first of its sections */
 									.${CLASSNAMES.contents} > ul > li > a {
-										display: block;
 										break-after: avoid;
 									}
 

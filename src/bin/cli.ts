@@ -74,14 +74,15 @@ await yargsInstance
 				})
 				.option('contents', {
 					default: defaults.contents,
-					describe: 'Generate a table of contents in the PDF. Use --no-contents to disable it.',
+					describe:
+						'Generate a table of contents with page numbers in the PDF. Use --no-contents to disable it.',
 					type: 'boolean',
 				})
 				.option('contents-links', {
 					choices: ['external', 'internal'] as const,
 					default: defaults.contentsLinks,
 					describe:
-						"Specifies the type of links in the generated table of contents. Use 'internal' for links that navigate within the PDF file or 'external' for links that point to the documentation website.",
+						"Specifies the type of links in the generated table of contents. Use 'internal' for links that navigate within the PDF file or 'external' for links that point to the documentation website, which leaves out the page numbers.",
 				})
 				.option('contents-name', {
 					describe: 'Customizes the generated table of contents name in the PDF.',
