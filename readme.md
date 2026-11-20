@@ -180,9 +180,9 @@ Custom styles passed via the `--styles` flag can target classes the tool assigns
 - `.s2pdf-contents` - The wrapper around the generated table of contents heading and list.
 - `.s2pdf-cover` - The cover page. Pages with other elements that have this class print without header and footer, too.
 - `.s2pdf-heading` - The element that contains `<h1>` headings of each page.
-- `.s2pdf-media` - The link that wraps each video.
+- `.s2pdf-media` - The link that wraps each video and embedded video player.
 - `.s2pdf-media-badge` - The play badge over each video.
-- `.s2pdf-media-link` - The caption below each video, audio, and embedded video player, with a link to it on the website.
+- `.s2pdf-media-link` - The caption below each audio element, with a link to it on the website.
 - `.s2pdf-pagebreak` - Each page text content with a defined CSS `break-after: page` property.
 
 #### Cover, back page, header, and footer
@@ -274,7 +274,7 @@ setLogger()
 - Topic entries that link to other domains are skipped, and all flags work as usual.
 - The parsed pages are assembled into a single document for printing. It includes the stylesheets of every page, since Astro bundles CSS per page, and the content of open shadow roots, such as those of web components.
 - Before printing, the tool adapts the document for paper: collapsed `<details>` elements are expanded, canvases, such as charts, are captured as images at twice their pixel density (WebGL canvases can't be read and print blank), fixed-position elements in the docs content are hidden, and headings, table rows, and grid items that span several rows are kept from splitting across pages. With a page size from `--format`, table cells wrap only between words where the table fits the page, images and diagrams taller than a page are scaled down to fit on one page, together with their caption and the headings right before them, and boxes with a border or shadow that fit on a page, such as cards and callouts, are kept on one page.
-- Videos, audio, and embedded YouTube and Vimeo players can't play on paper, so each gets a caption with a link to its section on the website, and videos print their current frame, or else their poster, with a play badge over it. The links use the canonical URL of each page, so they point to the published site even when the PDF is made from a local server. `--no-media-links` turns this off.
+- Videos, audio, and embedded YouTube and Vimeo players can't play on paper, so each links to its section on the website. Videos and players link from their frame, and videos print their current frame, or else their poster, with a play badge over it. Audio prints no player, so it gets a caption with the link instead. The links use the canonical URL of each page, so they point to the published site even when the PDF is made from a local server. `--no-media-links` turns this off.
 - Chrome writes internal links, such as those of the table of contents, as links to named destinations, which PDF tools such as compressors can remove from the document. The tool points these links straight at their page instead, so they keep working in every PDF viewer.
 - Content rendered by client-side scripts, such as a component that fetches data, might not be ready when a page's `domcontentloaded` event fires. Pass `--page-wait-until networkidle0` to wait for it.
 - Relative to upstream, this fork migrates the runtime from [Bun](https://bun.sh) to [Node.js](https://nodejs.org), the CLI to [yargs](https://yargs.js.org), logging to [lognow](https://github.com/kitschpatrol/lognow), bundling to [tsdown](https://tsdown.dev), and linting and formatting to [@kitschpatrol/shared-config](https://github.com/kitschpatrol/shared-config). It also drops the progress spinner in favor of plain log output, as suggested in [Linkerin/starlight-to-pdf#13](https://github.com/Linkerin/starlight-to-pdf/issues/13).

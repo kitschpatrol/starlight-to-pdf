@@ -105,8 +105,7 @@ describe('linkMedia', () => {
 			},
 			intro: {
 				attributes: 'autoplay',
-				caption:
-					'Video · Watch it on the website: published.example/docs/page -> https://published.example/docs/page',
+				caption: undefined,
 				link: 'https://published.example/docs/page 0px with badge',
 				poster: undefined,
 			},
@@ -114,23 +113,20 @@ describe('linkMedia', () => {
 			outside: { attributes: '', caption: undefined, link: undefined, poster: undefined },
 			poster: {
 				attributes: 'preload',
-				caption:
-					'Video · Watch it on the website: published.example/docs/page -> https://published.example/docs/page',
+				caption: undefined,
 				link: 'https://published.example/docs/page 0px with badge',
 				poster: 'https://docs.example/po',
 			},
 			video: {
 				attributes: 'preload',
-				caption:
-					'Video · Watch it on the website: published.example/docs/page#first-section -> https://published.example/docs/page#first-section',
+				caption: undefined,
 				link: 'https://published.example/docs/page#first-section 24px with badge',
 				poster: 'data:image/jpeg;base64,',
 			},
 			youtube: {
 				attributes: '',
-				caption:
-					'Video · Watch it on the website: published.example/docs/page#second-section -> https://published.example/docs/page#second-section',
-				link: undefined,
+				caption: undefined,
+				link: 'https://published.example/docs/page#second-section 0px',
 				poster: undefined,
 			},
 		})

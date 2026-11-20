@@ -5,9 +5,10 @@ import { log } from './log'
 /**
  * Links the media in the content that can't play on paper to their section on
  * the website, and returns how many it linked: videos, audio, and embedded
- * YouTube and Vimeo players. Each gets a caption with the link, and each video
- * also becomes a link itself, with a play badge over it, and keeps its current
- * frame as its poster. Runs in the browser context.
+ * YouTube and Vimeo players. Videos and players become links themselves, and
+ * videos also keep their current frame as their poster and get a play badge
+ * over it. Audio prints no player, so it gets a caption with the link instead.
+ * Runs in the browser context.
  */
 function markMedia(
 	contentSelector: string,
@@ -71,20 +72,22 @@ function markMedia(
 			url.hash = heading.id
 		}
 
-		const isAudio = element instanceof HTMLAudioElement
-		const captionLink = document.createElement('a')
-		captionLink.href = url.href
-		captionLink.textContent = `${url.host}${url.pathname}${url.search}${url.hash}`
-		const caption = document.createElement('span')
-		caption.className = classnames.mediaLink
-		caption.append(
-			isAudio ? 'Audio · Listen to it on the website: ' : 'Video · Watch it on the website: ',
-			captionLink,
-		)
-
 		// Without controls, audio doesn't render and videos print no control bar
 		element.removeAttribute('controls')
 
+		if (element instanceof HTMLAudioElement) {
+			const captionLink = document.createElement('a')
+			captionLink.href = url.href
+			captionLink.textContent = `${url.host}${url.pathname}${url.search}${url.hash}`
+			const caption = document.createElement('span')
+			caption.className = classnames.mediaLink
+			caption.append('Audio · Listen to it on the website: ', captionLink)
+			element.after(caption)
+			linkedCount += 1
+			continue
+		}
+
+		// Before moving the video into its link, which pauses it
 		if (element instanceof HTMLVideoElement) {
 			const frame = captureFrame(element)
 			if (frame !== undefined) {
@@ -96,19 +99,20 @@ function markMedia(
 				element.setAttribute('preload', 'none')
 				element.removeAttribute('autoplay')
 			}
+		}
 
-			// The link takes the place of the video among its siblings, whose
-			// spacing rules skip links, so it takes the video's top margin too
-			const link = document.createElement('a')
-			link.href = url.href
-			link.className = classnames.media
-			link.style.marginTop = getComputedStyle(element).marginTop
-			element.replaceWith(link)
-			link.append(element)
+		// The link takes the place of the media among its siblings, whose spacing
+		// rules skip links, so it takes the media's top margin too
+		const link = document.createElement('a')
+		link.href = url.href
+		link.className = classnames.media
+		link.style.marginTop = getComputedStyle(element).marginTop
+		element.replaceWith(link)
+		link.append(element)
+
+		// Embedded players show their own play button
+		if (element instanceof HTMLVideoElement) {
 			link.insertAdjacentHTML('beforeend', badge)
-			link.after(caption)
-		} else {
-			element.after(caption)
 		}
 
 		linkedCount += 1
