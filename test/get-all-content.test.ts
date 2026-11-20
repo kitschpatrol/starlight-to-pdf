@@ -94,4 +94,15 @@ describe('getAllContent', () => {
 		])
 		expect(htmlContent).toContain('<style>.inline {}</style>')
 	})
+
+	it('should open collapsed details, including exclusive accordions', async () => {
+		const { htmlContent, page } = await parseFixturePage(`
+			<details name="faq"><summary>One</summary><p>First</p></details>
+			<details name="faq"><summary>Two</summary><p>Second</p></details>`)
+		await page.setContent(htmlContent)
+		expect(await page.$$eval('details', (elements) => elements.map(({ open }) => open))).toEqual([
+			true,
+			true,
+		])
+	})
 })

@@ -51,6 +51,14 @@ async function parsePage({ internalLinks, page }: ParsePageParams): Promise<Pars
 				const mainInfo = document.querySelector(selectors.mainInfo)
 				mainInfo?.classList.add(classnames.pageBreak)
 
+				// A PDF reader can't expand collapsed details, so print their content
+				const allDetails = mainInfo?.querySelectorAll('details') ?? []
+				for (const details of allDetails) {
+					// Opening every details of an exclusive accordion would close the others
+					details.removeAttribute('name')
+					details.open = true
+				}
+
 				const subheadings = Array.from(
 					document.querySelectorAll<HTMLElement>(selectors.subheading),
 					(subheading) => {
