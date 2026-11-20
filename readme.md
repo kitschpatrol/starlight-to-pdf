@@ -31,6 +31,7 @@ Stylistic and functional changes include:
 - Automatically detect and correctly crawl sites that use the [starlight-sidebar-topics](https://github.com/HiDeoo/starlight-sidebar-topics) plugin
 - Add `--browser-no-sandbox` flag for compatibility with certain environments
 - Add experimental `--dynamic-page-height` flag that lets page content drive the final page height
+- Carry every page's styles into the PDF and adapt diagrams, canvases, tables, and grids for print
 - Change `--contents-links` default to `internal`
 - Change `--format` default to `letter`
 - Fix `--exclude` and `--last` matching on sites built without trailing slashes
@@ -269,6 +270,9 @@ setLogger()
 
 - The crawler loads the given URL and searches for the first page with a pagination link or a topics navigation, then either follows the `rel="next"` chain (plain Starlight sites) or visits each topic and collects the links of its sidebar in order (starlight-sidebar-topics sites).
 - Topic entries that link to other domains are skipped, and all flags work as usual.
+- The parsed pages are assembled into a single document for printing. It includes the stylesheets of every page, since Astro bundles CSS per page.
+- Before printing, the tool adapts the document for paper: collapsed `<details>` elements are expanded, canvases are captured as images (WebGL canvases can't be read and print blank), fixed-position elements in the docs content are hidden, and headings, table rows, and grid items that span several rows are kept from splitting across pages. With a page size from `--format`, table cells wrap only between words where the table fits the page, and images and diagrams taller than a page are scaled down to fit on one page.
+- Content rendered by client-side scripts, such as a component that fetches data, might not be ready when a page's `domcontentloaded` event fires. Pass `--page-wait-until networkidle0` to wait for it.
 - Relative to upstream, this fork migrates the runtime from [Bun](https://bun.sh) to [Node.js](https://nodejs.org), the CLI to [yargs](https://yargs.js.org), logging to [lognow](https://github.com/kitschpatrol/lognow), bundling to [tsdown](https://tsdown.dev), and linting and formatting to [@kitschpatrol/shared-config](https://github.com/kitschpatrol/shared-config). It also drops the progress spinner in favor of plain log output, as suggested in [Linkerin/starlight-to-pdf#13](https://github.com/Linkerin/starlight-to-pdf/issues/13).
 - The original author wrote about the design of the tool in [Transforming Starlight into PDF: experience and insights](https://dev.to/linkerin/transforming-starlight-into-pdf-experience-and-insights-j1d).
 
