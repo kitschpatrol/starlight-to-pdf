@@ -51,7 +51,7 @@ export const PAPER_FORMATS = [
 ] as const satisfies readonly PaperFormat[]
 
 /** Default margins for the generated PDF, top right bottom left. */
-export const DEFAULT_MARGINS = '1cm 1cm 1cm 1.5cm'
+export const DEFAULT_MARGINS = '2cm 1.5cm 2cm 1.5cm'
 
 /** Default delay between viewport scrolls while waiting for lazy-loaded content. */
 export const SCROLL_DELAY_MS = 100

@@ -9,9 +9,9 @@ describe('getPrintLayout', () => {
 	it('should subtract the default margins from a letter page', () => {
 		const layout = getPrintLayout(resolveOptions({ url: 'https://example.com' }))
 		expect(layout.pageWidthPixels).toBe(816)
-		expect(layout.contentWidthPixels).toBeCloseTo(816 - 2.5 * CENTIMETER_PIXELS)
-		expect(layout.contentHeightPixels).toBeCloseTo(1056 - 2 * CENTIMETER_PIXELS)
-		expect(layout.verticalInsetPixels).toBeCloseTo(2 * CENTIMETER_PIXELS)
+		expect(layout.contentWidthPixels).toBeCloseTo(816 - 3 * CENTIMETER_PIXELS)
+		expect(layout.contentHeightPixels).toBeCloseTo(1056 - 4 * CENTIMETER_PIXELS)
+		expect(layout.verticalInsetPixels).toBeCloseTo(4 * CENTIMETER_PIXELS)
 	})
 
 	it('should subtract paddings and numeric margins', () => {
