@@ -1,5 +1,9 @@
-import { describe, expect, it } from 'vitest'
-import { mergeStylesheets } from '../src/lib/get-all-content'
+import type { Browser, Page } from 'puppeteer'
+import puppeteer from 'puppeteer'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import getAllContent, { mergeStylesheets } from '../src/lib/get-all-content'
+import { setLogger } from '../src/lib/log'
+import { resolveOptions } from '../src/lib/options'
 
 describe('mergeStylesheets', () => {
 	it('should take the first page stylesheets in order', () => {
@@ -31,5 +35,63 @@ describe('mergeStylesheets', () => {
 		const accumulated = ['a']
 		mergeStylesheets(accumulated, ['b'])
 		expect(accumulated).toEqual(['a'])
+	})
+})
+
+describe('getAllContent', () => {
+	const origin = 'https://docs.example'
+	let browser: Browser
+
+	beforeAll(async () => {
+		setLogger()
+		// The fixtures are local markup, and Linux CI runners restrict the sandbox
+		browser = await puppeteer.launch({ args: ['--no-sandbox'] })
+	}, 60_000)
+
+	afterAll(async () => {
+		await browser.close()
+	})
+
+	async function parseFixturePage(content: string) {
+		const page: Page = await browser.newPage()
+		await page.setRequestInterception(true)
+		page.on('request', (request) => {
+			void request.respond(
+				request.resourceType() === 'document'
+					? {
+							body: `<!doctype html>
+								<html>
+									<head>
+										<link rel="stylesheet" href="../../assets/site.css">
+										<style>.site {}</style>
+									</head>
+									<body>
+										<div><h1 id="_top">Page</h1></div>
+										<div class="sl-markdown-content">${content}</div>
+									</body>
+								</html>`,
+							contentType: 'text/html',
+						}
+					: { body: '', contentType: 'text/css' },
+			)
+		})
+		await page.goto(`${origin}/guide/page/`)
+
+		const result = await getAllContent({
+			contentsData: new Set(),
+			htmlContent: '',
+			options: resolveOptions({ url: origin }),
+			page,
+		})
+		return { page, ...result }
+	}
+
+	it('should collect stylesheets outside the content with absolute link URLs', async () => {
+		const { htmlContent, stylesheets } = await parseFixturePage('<style>.inline {}</style>')
+		expect(stylesheets).toEqual([
+			`<link rel="stylesheet" href="${origin}/assets/site.css">`,
+			'<style>.site {}</style>',
+		])
+		expect(htmlContent).toContain('<style>.inline {}</style>')
 	})
 })
