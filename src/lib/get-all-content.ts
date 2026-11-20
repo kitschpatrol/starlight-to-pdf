@@ -8,6 +8,7 @@ import gotoWithRetry from './goto-with-retry'
 import linkMedia from './link-media'
 import { log } from './log'
 import { normalizePageUrl } from './options'
+import pointLinksAtSite from './point-links-at-site'
 import rasterizeCanvases from './rasterize-canvases'
 
 type ProcessPageContentReturn = {
@@ -184,6 +185,7 @@ async function processPageContent(
 		await linkMedia(page)
 	}
 
+	await pointLinksAtSite(page)
 	const parsedData = await parsePage({ internalLinks, page })
 
 	const contents: Contents = {
