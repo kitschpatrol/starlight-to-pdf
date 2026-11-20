@@ -14,6 +14,7 @@ import getStartingUrl from './get-starting-url'
 import gotoWithRetry from './goto-with-retry'
 import applyHeaderFooter from './header-footer'
 import hideFixedElements from './hide-fixed-elements'
+import keepBoxesWhole from './keep-boxes-whole'
 import keepGridItemsWhole from './keep-grid-items-whole'
 import { log } from './log'
 import { resolveOptions } from './options'
@@ -157,6 +158,7 @@ export async function starlightToPdf(
 			// Dynamic pages grow with their content instead
 			if (!resolved.dynamicPageHeight) {
 				await fitGraphicsToPage(page, resolved)
+				await keepBoxesWhole(page, resolved)
 			}
 		}
 
