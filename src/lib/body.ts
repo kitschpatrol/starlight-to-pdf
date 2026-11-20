@@ -1,5 +1,5 @@
 import type { Contents, DocumentInfo, GetAllContentReturn, ResolvedOptions } from './types'
-import { CLASSNAMES, PAGE_TITLE_ATTRIBUTE } from './constants'
+import { CLASSNAMES, HEADINGS_SELECTOR, PAGE_TITLE_ATTRIBUTE } from './constants'
 import getFileContent from './get-file-content'
 import { log } from './log'
 
@@ -154,8 +154,8 @@ export async function composeBody({
 										break-inside: avoid !important;
 									}
 
-									/* Anchor links make Starlight headings inline, which voids their own break-after */
-									.${CLASSNAMES.starlight.headingWrapper} {
+									/* Applies without Starlight's print styles too. Anchor links make Starlight headings inline, which voids their own break-after, so their wrappers need it. */
+									${HEADINGS_SELECTOR} {
 										break-after: avoid;
 									}
 
