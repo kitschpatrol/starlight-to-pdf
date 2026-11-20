@@ -130,7 +130,7 @@ await yargsInstance
 				.option('footer', {
 					default: defaults.footer,
 					describe:
-						'Adds a footer with the title, date, and page numbers to every page except the cover and back pages. Needs bottom margins to print in.',
+						'Adds a footer with the revision, date, and page numbers to every page except the cover and back pages, and the title without a header. Needs bottom margins to print in.',
 					type: 'boolean',
 				})
 				.option('format', {
@@ -142,7 +142,7 @@ await yargsInstance
 				.option('header', {
 					default: defaults.header,
 					describe:
-						'Adds a header with the title of the current docs page to every page except the cover and back pages. Needs top margins to print in.',
+						'Adds a header with the title of the document and of the current docs page to every page except the cover and back pages. Needs top margins to print in.',
 					type: 'boolean',
 				})
 				.option('last', {
@@ -202,7 +202,8 @@ await yargsInstance
 					type: 'boolean',
 				})
 				.option('revision', {
-					describe: "Revision shown on the cover and back pages, such as 'Version 1.2.0'.",
+					describe:
+						"Revision shown on the cover and back pages and in the footer, such as 'Version 1.2.0'.",
 					type: 'string',
 				})
 				.option('scroll-delay', {
@@ -234,7 +235,7 @@ await yargsInstance
 				})
 				.option('title', {
 					describe:
-						'Title of the document, shown on the cover and back pages and in the footer, and stored as the PDF title. Defaults to the title of the site.',
+						'Title of the document, shown on the cover and back pages and in the header, and stored as the PDF title. Defaults to the title of the site.',
 					type: 'string',
 				})
 				.option('verbose', {

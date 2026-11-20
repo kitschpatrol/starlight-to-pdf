@@ -91,8 +91,9 @@ export type StarlightToPdfOptions = {
 	 */
 	followingHtml?: string | undefined
 	/**
-	 * Adds a footer with the title, date, and page numbers to every page except
-	 * the cover and back pages. Needs bottom margins to print in.
+	 * Adds a footer with the revision, date, and page numbers to every page
+	 * except the cover and back pages, and the title without a header. Needs
+	 * bottom margins to print in.
 	 */
 	footer?: boolean | undefined
 	/**
@@ -101,8 +102,9 @@ export type StarlightToPdfOptions = {
 	 */
 	format?: (typeof PAPER_FORMATS)[number] | undefined
 	/**
-	 * Adds a header with the title of the current docs page to every page except
-	 * the cover and back pages. Needs top margins to print in.
+	 * Adds a header with the title of the document and of the current docs page
+	 * to every page except the cover and back pages. Needs top margins to print
+	 * in.
 	 */
 	header?: boolean | undefined
 	/**
@@ -158,7 +160,8 @@ export type StarlightToPdfOptions = {
 	 */
 	printBg?: boolean | undefined
 	/**
-	 * Revision shown on the cover and back pages, such as `Version 1.2.0`.
+	 * Revision shown on the cover and back pages and in the footer, such as
+	 * `Version 1.2.0`.
 	 */
 	revision?: string | undefined
 	/**
@@ -185,7 +188,7 @@ export type StarlightToPdfOptions = {
 	 */
 	timeout?: number | undefined
 	/**
-	 * Title of the document, shown on the cover and back pages and in the footer,
+	 * Title of the document, shown on the cover and back pages and in the header,
 	 * and stored as the PDF title. Defaults to the title of the site.
 	 */
 	title?: string | undefined

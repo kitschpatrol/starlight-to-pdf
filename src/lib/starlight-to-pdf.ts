@@ -181,6 +181,7 @@ export async function starlightToPdf(
 					document: documentInfo,
 					footer: resolved.footer,
 					header: resolved.header,
+					revision: resolved.revision,
 				})
 			}
 		}

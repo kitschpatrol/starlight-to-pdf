@@ -7,6 +7,7 @@ type HeaderFooterOptions = {
 	document: DocumentInfo
 	footer: boolean
 	header: boolean
+	revision: string | undefined
 }
 
 type MarginTypography = {
@@ -22,22 +23,32 @@ function toCssString(text: string): string {
 		.replaceAll('\n', ' ')}"`
 }
 
+/** Joins the parts that have text with a middle dot. */
+function joinParts(parts: Array<string | undefined>): string {
+	return parts.filter((part) => part !== undefined && part !== '').join(' · ')
+}
+
 /**
  * Builds the `@page` rules for the running header and footer, which print in
- * the page margins: the title of the current docs page at the top, and the
- * document title, date, and page numbers at the bottom. The cover and back
- * pages print without them.
+ * the page margins: the document title and the title of the current docs page
+ * at the top, and the revision, date, and page numbers at the bottom, where the
+ * document title moves without a header. The cover and back pages print without
+ * them.
  */
 export function buildHeaderFooterRules(
 	units: PrintUnit[],
-	{ document, footer, header }: HeaderFooterOptions,
+	{ document, footer, header, revision }: HeaderFooterOptions,
 	{ color, fontFamily }: MarginTypography,
 ): string {
 	// Margin boxes inherit from the page context, but not from the document
 	const rules = [`@page { color: ${color}; font-family: ${fontFamily}; font-size: 8pt; }`]
 
+	if (header) {
+		rules.push(`@page { @top-left { content: ${toCssString(document.title)}; } }`)
+	}
+
 	if (footer) {
-		const footerText = [document.title, document.date].filter((text) => text !== '').join(' · ')
+		const footerText = joinParts([header ? undefined : document.title, revision, document.date])
 		rules.push(
 			`@page { @bottom-left { content: ${toCssString(footerText)}; } @bottom-right { content: counter(page) " / " counter(pages); } }`,
 		)
@@ -49,8 +60,9 @@ export function buildHeaderFooterRules(
 			rules.push(
 				`@page ${pageName} { @top-left { content: none; } @bottom-left { content: none; } @bottom-right { content: none; } }`,
 			)
-		} else if (header && unit.title !== undefined) {
-			rules.push(`@page ${pageName} { @top-left { content: ${toCssString(unit.title)}; } }`)
+		} else if (header && unit.title !== undefined && unit.title !== document.title) {
+			const headerText = joinParts([document.title, unit.title])
+			rules.push(`@page ${pageName} { @top-left { content: ${toCssString(headerText)}; } }`)
 		}
 	}
 
