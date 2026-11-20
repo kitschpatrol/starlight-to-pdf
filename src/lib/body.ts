@@ -109,7 +109,7 @@ function createContents(contentData: Contents[], options: ResolvedOptions): stri
 	)
 
 	return `<div class="${CLASSNAMES.starlight.markdownContent} ${CLASSNAMES.contents} ${CLASSNAMES.pageBreak}" ${PAGE_TITLE_ATTRIBUTE}="${escapeHtml(contentsName)}">
-						<h2>${escapeHtml(contentsName)}</h2>
+						<h1>${escapeHtml(contentsName)}</h1>
 						${list}
 					</div>`
 }
@@ -169,7 +169,8 @@ export async function composeBody({
 									}
 
 									/* Sets page titles apart from their content, as the panels of the site do */
-									.${CLASSNAMES.heading} {
+									.${CLASSNAMES.heading},
+									.${CLASSNAMES.contents} > h1 {
 										margin-bottom: 1.5rem;
 									}
 

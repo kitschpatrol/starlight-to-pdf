@@ -30,7 +30,7 @@ describe('composeBody', () => {
 			new Set([{ heading: 'Use <Card> & <Tabs>', url: '#/use/' }]),
 		)
 		expect(body).toContain('<a href="#/use/">Use &lt;Card&gt; &amp; &lt;Tabs&gt;</a>')
-		expect(body).toContain('<h2>Q&amp;A</h2>')
+		expect(body).toContain('<h1>Q&amp;A</h1>')
 		expect(body).toContain('data-s2pdf-title="Q&amp;A"')
 	})
 
