@@ -254,6 +254,8 @@ console.log(`Wrote ${result.pages} pages to ${result.path} in ${result.timeSecon
 await server.stop()
 ```
 
+For the static output that Starlight builds by default, `server.port` is the port that the preview server listens on, which moves past 4321 when another server, such as a dev server, holds that port. The preview servers of some adapters, such as `@astrojs/cloudflare`, report the port they asked for instead, so the PDF could come from that other server. With those, pass a free port with `preview({ server: { port } })`.
+
 You can then add a command like the following to your Starlight project's `package.json`:
 
 ```jsonc
