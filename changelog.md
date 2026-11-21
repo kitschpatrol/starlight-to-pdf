@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Entries are drafted with LLM assistance via [Chagent](https://github.com/kitschpatrol/chagent).
 
+## [2.0.0-beta.6] - 2026-11-20
+
+### Added
+
+- Turn web and email addresses in the cover subtitle, cover author, and back-page text into clickable links with `linkifyjs`. Bare domains link over HTTPS, and links are underlined in the surrounding text color.
+- Compress PDFs losslessly by default with `@neslinesli93/qpdf-wasm`, which works with Homebrew installs that skip install scripts. Compressed files use PDF 1.5 and preserve page appearance, tags, bookmarks, links, and metadata. Log the size savings and keep the original if compression fails or saves no space.
+- Add `--compress` and the library’s `compress` option to shrink PDFs further. Re-encode eligible photos as JPEG, targeting up to 192 ppi at print size, and downsample graphics with lossless encoding when that saves at least 25%. Preserve SVGs and transparent images, and restore the original image if its replacement shifts the layout.
+
+### Changed
+
+- Widen the default margins to `1in 1in 1in 1in`, giving running headers and footers more room.
+- Set the generated cover’s title block and details in up to three quarters of the printable width, and move the title down by two lines. Balance the title and subtitle across lines, keep long title words together, and scale the subtitle down with the title on narrow pages.
+
+### Fixed
+
+- Let long cover and back-page text flow onto additional pages to prevent it from overlapping following content.
+- Fix same-site links in PDFs made from a local preview by using the published origin from each page’s canonical URL, with `og:url` as a fallback. Resolve relative links against their source page so links from nested pages keep the correct path.
+
+### Documentation
+
+- Expand the README’s comparison with upstream to cover print pagination, table of contents page numbers and columns, linked media, direct PDF link destinations, and the default margins and outline.
+- Explain automatic cover and back-page links in the README, CLI help, and library option descriptions. Note in the README that filenames with a domain suffix, such as `README.md`, can also become links.
+- Document default lossless PDF compression and optional image re-encoding in the README and option help. Explain in the README which images are eligible and how `--css-page-size` affects downsampling.
+- Explain how Astro’s `site` setting supplies the canonical URL used to point PDF links at the published site.
+- Clarify the local preview example for Astro adapters such as `@astrojs/cloudflare` that can report the requested port after binding to another one. Show how to pass an unused port explicitly.
+
+### Maintenance
+
+- Add browser and CLI regression tests for PDF and image compression, including preserved PDF structure and link destinations. Check image orientation and color from full-resolution pixels with both default and software canvases for Linux and Windows CI.
+- Check at compile time that the CLI forwards every library option.
+
 ## [2.0.0-beta.5] - 2026-11-20
 
 ### Added
@@ -141,3 +172,4 @@ Entries are drafted with LLM assistance via [Chagent](https://github.com/kitschp
 [2.0.0-beta.3]: https://github.com/kitschpatrol/starlight-to-pdf/compare/v2.0.0-beta.2...v2.0.0-beta.3
 [2.0.0-beta.4]: https://github.com/kitschpatrol/starlight-to-pdf/compare/v2.0.0-beta.3...v2.0.0-beta.4
 [2.0.0-beta.5]: https://github.com/kitschpatrol/starlight-to-pdf/compare/v2.0.0-beta.4...v2.0.0-beta.5
+[2.0.0-beta.6]: https://github.com/kitschpatrol/starlight-to-pdf/compare/v2.0.0-beta.5...v2.0.0-beta.6
