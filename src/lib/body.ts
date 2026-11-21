@@ -50,11 +50,11 @@ function createCover(document: DocumentInfo, options: ResolvedOptions): string {
 		: ''
 
 	return `<section class="${CLASSNAMES.cover} ${CLASSNAMES.pageBreak}">
-						<div>
+						<div class="${CLASSNAMES.cover}-title">
 							<h1>${escapeHtml(document.title)}</h1>
 							${subtitle}
 						</div>
-						<p>${linesToHtml([options.author, getRevisionAndDate(document, options)])}</p>
+						<p class="${CLASSNAMES.cover}-details">${linesToHtml([options.author, getRevisionAndDate(document, options)])}</p>
 					</section>`
 }
 
@@ -313,6 +313,16 @@ export async function composeBody({
 
 									.${CLASSNAMES.cover} {
 										justify-content: space-between;
+									}
+
+									/* A narrower measure for the large type of the generated cover, for better line breaks in long titles */
+									:is(.${CLASSNAMES.cover}-title, .${CLASSNAMES.cover}-details) {
+										max-width: 75%;
+									}
+
+									/* A word longer than the measure runs into the space beside it rather than splitting */
+									.${CLASSNAMES.cover}-title h1 {
+										overflow-wrap: normal;
 									}
 
 									.${CLASSNAMES.backPage} {

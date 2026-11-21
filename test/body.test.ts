@@ -5,6 +5,7 @@ import type { StarlightToPdfOptions } from '../src/lib/options'
 import { composeBody, injectBody } from '../src/lib/body'
 import { SELECTORS } from '../src/lib/constants'
 import { resolveOptions } from '../src/lib/options'
+import { emulatePrintLayout, getPrintLayout } from '../src/lib/print-layout'
 
 // The about, contact, and notice sections in this order, with their paragraphs
 const BACK_PAGE_SECTIONS_REGEX =
@@ -60,7 +61,9 @@ describe('composeBody', () => {
 		})
 		expect(body).toContain('<h1>Docs &amp; Guides</h1>')
 		expect(body).toContain('<p class="s2pdf-cover-subtitle">Cleveland Museum of Art</p>')
-		expect(body).toContain('<p>Scalar &lt;Studio&gt;<br>Version 1.0.9 · November 19, 2026</p>')
+		expect(body).toContain(
+			'<p class="s2pdf-cover-details">Scalar &lt;Studio&gt;<br>Version 1.0.9 · November 19, 2026</p>',
+		)
 	})
 
 	it('should add a back page with paragraphs and line breaks of the text fields', async () => {
@@ -134,6 +137,28 @@ describe('injectBody', () => {
 		})
 	}
 
+	/**
+	 * Composes the document with a cover and injects it at the print layout of
+	 * letter paper, with Starlight's type sizes and the word wrapping of its
+	 * reset, in a font whose letters all take the same width.
+	 */
+	async function injectCover(
+		page: Page,
+		options: Omit<StarlightToPdfOptions, 'url'>,
+		htmlContent = '',
+	): Promise<void> {
+		const resolved = resolveOptions({ contents: false, cover: true, ...options, url: origin })
+		const body = await composeBody({
+			baseOrigin: origin,
+			contentsData: new Set(),
+			document: { date: 'November 20, 2026', title: options.title ?? 'Docs' },
+			htmlContent: `<style>:root { font-size: 16px; font-family: monospace, monospace; --sl-text-6xl: 4rem; --sl-text-2xl: 1.5rem; } h1, p { overflow-wrap: break-word; }</style>${htmlContent}`,
+			options: resolved,
+		})
+		await emulatePrintLayout(page, getPrintLayout(resolved))
+		await inject(page, { body })
+	}
+
 	async function getHeadStylesheets(page: Page): Promise<string[]> {
 		return page.$$eval('head link[rel~="stylesheet"], head style', (elements) =>
 			elements.map((element) => element.outerHTML),
@@ -204,5 +229,54 @@ describe('injectBody', () => {
 			title: document.querySelector('.s2pdf-heading')?.getBoundingClientRect().width,
 		}))
 		expect(widths.title).toBe(widths.container)
+	})
+	it('should set the cover in three quarters of the page area without splitting long words', async () => {
+		const page = await openStartPage()
+		// Each letter of the title takes 0.6 of 62.4 pixels, so its first word
+		// takes more than three quarters of the 624 pixels of the page area
+		await injectCover(page, { subtitle: 'Library documentation', title: 'Implementation Guide' })
+
+		const layout = await page.evaluate(() => {
+			const getWidth = (selector: string): number =>
+				document.querySelector(selector)?.getBoundingClientRect().width ?? 0
+			const word = document.createRange()
+			const text = document.querySelector('.s2pdf-cover h1')?.firstChild
+			if (text) {
+				word.setStart(text, 0)
+				word.setEnd(text, 'Implementation'.length)
+			}
+
+			return {
+				cover: getWidth('.s2pdf-cover'),
+				details: getWidth('.s2pdf-cover-details'),
+				title: getWidth('.s2pdf-cover-title'),
+				wordLines: new Set(Array.from(word.getClientRects(), (rect) => rect.top)).size,
+			}
+		})
+		expect(layout.title).toBeCloseTo(layout.cover * 0.75)
+		expect(layout.details).toBeCloseTo(layout.cover * 0.75)
+		expect(layout.wordLines).toBe(1)
+	})
+
+	it('should leave the layout of custom covers to them', async () => {
+		const page = await openStartPage()
+		await injectCover(
+			page,
+			{ cover: false },
+			'<section id="custom" class="s2pdf-cover"><div id="banner" style="height: 10px"></div></section>',
+		)
+
+		const boxes = await page.evaluate(() => {
+			const getBox = (selector: string): { top: number; width: number } => {
+				const { top, width } = document.querySelector(selector)?.getBoundingClientRect() ?? {
+					top: 0,
+					width: 0,
+				}
+				return { top, width }
+			}
+
+			return { banner: getBox('#banner'), custom: getBox('#custom') }
+		})
+		expect(boxes.banner).toEqual(boxes.custom)
 	})
 })
