@@ -343,7 +343,8 @@ export async function composeBody({
 									}
 
 									.${CLASSNAMES.cover}-subtitle {
-										font-size: var(--sl-text-2xl);
+										/* Smaller on narrow pages too, so it stays smaller than the title */
+										font-size: min(var(--sl-text-2xl), 7.5vw);
 									}
 
 									.${CLASSNAMES.backPage} strong {
