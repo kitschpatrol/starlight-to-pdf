@@ -3,6 +3,7 @@
 import { log, setDefaultLogOptions } from 'lognow'
 import yargs from 'yargs'
 import { hideBin } from 'yargs/helpers'
+import type { StarlightToPdfOptions } from '../lib'
 import { bin, version } from '../../package.json' with { type: 'json' }
 import {
 	DEFAULT_STARLIGHT_TO_PDF_OPTIONS,
@@ -66,6 +67,12 @@ await yargsInstance
 					default: defaults.browserNoSandbox,
 					describe:
 						'Adds the `--no-sandbox` and `--disable-setuid-sandbox` flags when launching the browser. Useful when running in environments where sandboxing is not available (e.g., certain CI/CD pipelines or Docker containers).',
+					type: 'boolean',
+				})
+				.option('compress', {
+					default: defaults.compress,
+					describe:
+						'Compresses the images of the PDF file further, at some loss: re-encodes photos as JPEG at up to 192 ppi of their printed size, and downsamples other images to 192 ppi without loss when that makes them at least a quarter smaller, leaving SVGs and images with transparency as they are. The PDF file is compressed without loss either way.',
 					type: 'boolean',
 				})
 				.option('contact', {
@@ -256,6 +263,7 @@ await yargsInstance
 					author: argv.author,
 					browserExecutable: argv.browserExecutable,
 					browserNoSandbox: argv.browserNoSandbox,
+					compress: argv.compress,
 					contact: argv.contact,
 					contents: argv.contents,
 					contentsLinks: argv.contentsLinks,
@@ -288,7 +296,7 @@ await yargsInstance
 					timeout: argv.timeout,
 					title: argv.title,
 					url,
-				})
+				} satisfies Record<keyof StarlightToPdfOptions, unknown>)
 			} catch (error) {
 				handleError(error)
 			}

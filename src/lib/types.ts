@@ -17,6 +17,7 @@ export type ResolvedOptions = {
 	author: string | undefined
 	browserExecutable: string | undefined
 	browserNoSandbox: boolean
+	compress: boolean
 	contact: string | undefined
 	contents: boolean
 	contentsLinks: 'external' | 'internal'

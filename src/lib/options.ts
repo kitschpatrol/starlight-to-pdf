@@ -40,6 +40,14 @@ export type StarlightToPdfOptions = {
 	 */
 	browserNoSandbox?: boolean | undefined
 	/**
+	 * Compresses the images of the PDF file further, at some loss: re-encodes
+	 * photos as JPEG at up to 192 ppi of their printed size, and downsamples
+	 * other images to 192 ppi without loss when that makes them at least a
+	 * quarter smaller, leaving SVGs and images with transparency as they are. The
+	 * PDF file is compressed without loss either way.
+	 */
+	compress?: boolean | undefined
+	/**
 	 * Adds a back page with these contact details. Blank lines separate
 	 * paragraphs, and line breaks are kept. Web and email addresses become
 	 * links.
@@ -209,6 +217,7 @@ export type StarlightToPdfOptions = {
  */
 export const DEFAULT_STARLIGHT_TO_PDF_OPTIONS = {
 	browserNoSandbox: false,
+	compress: false,
 	contents: true,
 	contentsLinks: 'internal',
 	cover: false,
@@ -291,6 +300,7 @@ export function resolveOptions(options: StarlightToPdfOptions): ResolvedOptions 
 			validatePath(value, 'browserExecutable'),
 		),
 		browserNoSandbox: options.browserNoSandbox ?? defaults.browserNoSandbox,
+		compress: options.compress ?? defaults.compress,
 		contents: options.contents ?? defaults.contents,
 		contentsLinks: options.contentsLinks ?? defaults.contentsLinks,
 		contentsName: options.contentsName,

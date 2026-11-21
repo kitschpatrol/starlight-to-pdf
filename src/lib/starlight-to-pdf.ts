@@ -4,6 +4,7 @@ import { scrollPageToBottom } from 'puppeteer-autoscroll-down'
 import type { StarlightToPdfOptions } from './options'
 import type { DocumentInfo } from './types'
 import { composeBody, injectBody } from './body'
+import compressImages from './compress-images'
 import { SELECTORS } from './constants'
 import applyDynamicPageHeight from './dynamic-page-height'
 import { ParsingError } from './errors'
@@ -184,6 +185,12 @@ export async function starlightToPdf(
 					revision: resolved.revision,
 				})
 			}
+		}
+
+		// Last, so the images keep the layout that the steps before measured and
+		// that the first rendering numbers the table of contents with
+		if (resolved.compress) {
+			await compressImages(page, resolved)
 		}
 
 		const pdfPath = await recordPdf({ hostname: baseUrl.hostname, options: resolved, page })

@@ -26,8 +26,13 @@ describe('resolveOptions', () => {
 		expect(resolved.footer).toBe(false)
 		expect(resolved.pdfOutline).toBe(true)
 		expect(resolved.mediaLinks).toBe(true)
+		expect(resolved.compress).toBe(false)
 		expect(resolved.title).toBeUndefined()
 		expect(resolved.date).toBeUndefined()
+	})
+
+	it('should accept compressing images further', () => {
+		expect(resolveOptions({ compress: true, url: 'https://example.com' }).compress).toBe(true)
 	})
 
 	it('should accept a URL instance and a margin object', () => {
