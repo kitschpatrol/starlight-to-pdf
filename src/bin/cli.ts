@@ -49,11 +49,12 @@ await yargsInstance
 				})
 				.option('about', {
 					describe:
-						'Adds a back page with this text, such as a description of the project. Blank lines separate paragraphs.',
+						'Adds a back page with this text, such as a description of the project. Blank lines separate paragraphs. Web and email addresses become links.',
 					type: 'string',
 				})
 				.option('author', {
-					describe: 'Author shown on the cover page, such as a person or an organization.',
+					describe:
+						'Author shown on the cover page, such as a person or an organization. Web and email addresses become links.',
 					type: 'string',
 				})
 				.option('browser-executable', {
@@ -69,7 +70,7 @@ await yargsInstance
 				})
 				.option('contact', {
 					describe:
-						'Adds a back page with these contact details. Blank lines separate paragraphs, and line breaks are kept.',
+						'Adds a back page with these contact details. Blank lines separate paragraphs, and line breaks are kept. Web and email addresses become links.',
 					type: 'string',
 				})
 				.option('contents', {
@@ -165,7 +166,7 @@ await yargsInstance
 				})
 				.option('notice', {
 					describe:
-						'Adds a back page with this notice, such as a confidentiality or copyright notice. Blank lines separate paragraphs.',
+						'Adds a back page with this notice, such as a confidentiality or copyright notice. Blank lines separate paragraphs. Web and email addresses become links.',
 					type: 'string',
 				})
 				.option('paddings', {
@@ -224,7 +225,7 @@ await yargsInstance
 					type: 'string',
 				})
 				.option('subtitle', {
-					describe: 'Subtitle shown on the cover page.',
+					describe: 'Subtitle shown on the cover page. Web and email addresses become links.',
 					type: 'string',
 				})
 				.option('timeout', {

@@ -59,6 +59,7 @@
 		"test": "vitest run"
 	},
 	"dependencies": {
+		"linkifyjs": "^4.4.0",
 		"lognow": "^0.8.9",
 		"yargs": "^18.2.0"
 	},

@@ -1,9 +1,13 @@
+import { find } from 'linkifyjs'
 import type { Contents, DocumentInfo, GetAllContentReturn, ResolvedOptions } from './types'
 import { CLASSNAMES, HEADINGS_SELECTOR, PAGE_TITLE_ATTRIBUTE } from './constants'
 import getFileContent from './get-file-content'
 import { log } from './log'
 
 const PARAGRAPH_SEPARATOR_REGEX = /\n\s*\n/v
+// Closing quotes, ellipses, dashes, and CJK punctuation, which linkifyjs keeps in
+// a web address that has a path, though they end the address in text
+const LINK_END_REGEX = /[‘’“”«»‹›…–—、。！，：；？）」』】]/v
 
 /** Escapes text for HTML content and quoted attribute values. */
 function escapeHtml(text: string): string {
@@ -18,24 +22,43 @@ function hasText(text: string | undefined): text is string {
 	return text !== undefined && text !== ''
 }
 
-/** Escapes the lines that have text and joins them with line breaks. */
-function linesToHtml(lines: Array<string | undefined>): string {
-	return lines
-		.filter((line) => hasText(line))
-		.map((line) => escapeHtml(line))
-		.join('<br>')
+/**
+ * Escapes text for HTML and turns the web and email addresses in it into links.
+ * Web addresses without a protocol, such as `example.com`, link over HTTPS.
+ */
+function linkify(text: string): string {
+	const links = find(text, { defaultProtocol: 'https' })
+	let html = ''
+	let textStart = 0
+	for (const link of links) {
+		const endIndex = link.value.search(LINK_END_REGEX)
+		const value = endIndex > 0 ? link.value.slice(0, endIndex) : link.value
+		// The href ends with the text of the link, after any protocol it adds
+		const href = link.href.slice(0, link.href.length - (link.value.length - value.length))
+		html += escapeHtml(text.slice(textStart, link.start))
+		html += `<a href="${escapeHtml(href)}">${escapeHtml(value)}</a>`
+		textStart = link.start + value.length
+	}
+
+	return html + escapeHtml(text.slice(textStart))
+}
+
+/** Joins the lines of HTML that have content with line breaks. */
+function joinLines(lines: string[]): string {
+	return lines.filter((line) => line !== '').join('<br>')
 }
 
 /**
- * Converts plain text to HTML paragraphs. Blank lines separate paragraphs, and
- * line breaks within a paragraph are kept.
+ * Converts plain text to HTML paragraphs with links. Blank lines separate
+ * paragraphs, and line breaks within a paragraph are kept.
  */
 function textToParagraphs(text: string): string {
 	return text
 		.replaceAll('\r\n', '\n')
 		.trim()
 		.split(PARAGRAPH_SEPARATOR_REGEX)
-		.map((paragraph) => `<p>${linesToHtml(paragraph.split('\n'))}</p>`)
+		.map((paragraph) => paragraph.split('\n').map((line) => linkify(line)))
+		.map((lines) => `<p>${joinLines(lines)}</p>`)
 		.join('')
 }
 
@@ -46,15 +69,19 @@ function getRevisionAndDate(document: DocumentInfo, options: ResolvedOptions): s
 
 function createCover(document: DocumentInfo, options: ResolvedOptions): string {
 	const subtitle = hasText(options.subtitle)
-		? `<p class="${CLASSNAMES.cover}-subtitle">${escapeHtml(options.subtitle)}</p>`
+		? `<p class="${CLASSNAMES.cover}-subtitle">${linkify(options.subtitle)}</p>`
 		: ''
+	const details = joinLines([
+		linkify(options.author ?? ''),
+		escapeHtml(getRevisionAndDate(document, options)),
+	])
 
 	return `<section class="${CLASSNAMES.cover} ${CLASSNAMES.pageBreak}">
 						<div class="${CLASSNAMES.cover}-title">
 							<h1>${escapeHtml(document.title)}</h1>
 							${subtitle}
 						</div>
-						<p class="${CLASSNAMES.cover}-details">${linesToHtml([options.author, getRevisionAndDate(document, options)])}</p>
+						<p class="${CLASSNAMES.cover}-details">${details}</p>
 					</section>`
 }
 
@@ -343,6 +370,13 @@ export async function composeBody({
 
 									:is(.${CLASSNAMES.cover}, .${CLASSNAMES.backPage}) p {
 										margin: 0;
+									}
+
+									/* Starlight styles only the links of the docs content, so these take the color of their text instead of the browser's blue, with an underline clear of descenders to set them apart */
+									:is(.${CLASSNAMES.cover}-title, .${CLASSNAMES.cover}-details, .${CLASSNAMES.backPage}) a {
+										color: inherit;
+										text-decoration: underline;
+										text-underline-offset: 0.2em;
 									}
 
 									.${CLASSNAMES.backPage} p + p {

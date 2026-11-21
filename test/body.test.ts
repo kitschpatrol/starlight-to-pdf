@@ -9,7 +9,8 @@ import { emulatePrintLayout, getPrintLayout } from '../src/lib/print-layout'
 
 // The about, contact, and notice sections in this order, with their paragraphs
 const BACK_PAGE_SECTIONS_REGEX =
-	/s2pdf-back-page-about"><p>First paragraph.<\/p><p>Second paragraph.<\/p>.*s2pdf-back-page-contact"><p>Scalar Studio<br>info@scalar.studio<\/p>.*s2pdf-back-page-notice"><p>Confidential &amp; proprietary.<\/p>/sv
+	/s2pdf-back-page-about"><p>First paragraph.<\/p><p>Second paragraph.<\/p>.*s2pdf-back-page-contact"><p>Scalar Studio<br><a href="mailto:info@scalar.studio">info@scalar.studio<\/a><\/p>.*s2pdf-back-page-notice"><p>Confidential &amp; proprietary.<\/p>/sv
+const ABOUT_SECTION_REGEX = /s2pdf-back-page-about">(?<html>.*?)<\/div>/sv
 
 describe('composeBody', () => {
 	async function compose(
@@ -76,6 +77,87 @@ describe('composeBody', () => {
 		const backPage = body.slice(body.indexOf('<section class="s2pdf-back-page'))
 		expect(backPage).toContain('<p><strong>Docs &amp; Guides</strong><br>November 19, 2026</p>')
 		expect(backPage).toMatch(BACK_PAGE_SECTIONS_REGEX)
+	})
+
+	it('should render back page text without addresses as before', async () => {
+		const body = await compose({
+			about: 'A snapshot of the documentation,\nprinted for reference.\n\nSecond paragraph.',
+			contact: 'Scalar Studio\nCleveland, Ohio',
+			notice: 'Confidential <draft> & proprietary.',
+		})
+		expect(body).toContain(
+			'<div class="s2pdf-back-page-about"><p>A snapshot of the documentation,<br>printed for reference.</p><p>Second paragraph.</p></div><div class="s2pdf-back-page-contact"><p>Scalar Studio<br>Cleveland, Ohio</p></div><div class="s2pdf-back-page-notice"><p>Confidential &lt;draft&gt; &amp; proprietary.</p></div>',
+		)
+	})
+
+	/** Returns the HTML of the about section of a back page with the given text. */
+	async function composeAbout(about: string): Promise<string | undefined> {
+		return ABOUT_SECTION_REGEX.exec(await compose({ about }))?.groups?.html
+	}
+
+	it('should link a URL without the period that ends the sentence', async () => {
+		expect(
+			await composeAbout('The latest version is at https://scalar.studio/x/cma/ten-kings.'),
+		).toBe(
+			'<p>The latest version is at <a href="https://scalar.studio/x/cma/ten-kings">https://scalar.studio/x/cma/ten-kings</a>.</p>',
+		)
+	})
+
+	it('should link bare domains over HTTPS', async () => {
+		expect(await composeAbout('Visit scalar.studio or example.com/docs')).toBe(
+			'<p>Visit <a href="https://scalar.studio">scalar.studio</a> or <a href="https://example.com/docs">example.com/docs</a></p>',
+		)
+	})
+
+	it('should link email addresses with mailto', async () => {
+		expect(await composeAbout('Write to info@scalar.studio')).toBe(
+			'<p>Write to <a href="mailto:info@scalar.studio">info@scalar.studio</a></p>',
+		)
+	})
+
+	it('should end links at the typographic punctuation after them', async () => {
+		expect(
+			await composeAbout(
+				'Online at “https://example.com/docs”, https://example.com/legal…, https://example.com/a—b, and https://example.com/ja。',
+			),
+		).toBe(
+			'<p>Online at “<a href="https://example.com/docs">https://example.com/docs</a>”, <a href="https://example.com/legal">https://example.com/legal</a>…, <a href="https://example.com/a">https://example.com/a</a>—b, and <a href="https://example.com/ja">https://example.com/ja</a>。</p>',
+		)
+	})
+
+	it('should leave names without a real top-level domain as text', async () => {
+		expect(await composeAbout('Built with Node.js')).toBe('<p>Built with Node.js</p>')
+	})
+
+	it('should link file names whose extension is a real top-level domain', async () => {
+		// Moldova's top-level domain
+		expect(await composeAbout('See README.md')).toBe(
+			'<p>See <a href="https://README.md">README.md</a></p>',
+		)
+	})
+
+	it('should escape the href and text of links', async () => {
+		expect(await composeAbout('https://example.com/?a=1&b=2')).toBe(
+			'<p><a href="https://example.com/?a=1&amp;b=2">https://example.com/?a=1&amp;b=2</a></p>',
+		)
+		expect(await composeAbout('https://example.com/?q="x"y')).toBe(
+			'<p><a href="https://example.com/?q=&quot;x&quot;y">https://example.com/?q=&quot;x&quot;y</a></p>',
+		)
+	})
+
+	it('should link addresses in the subtitle and author of the cover but not in the revision', async () => {
+		const body = await compose({
+			author: 'Scalar Studio, scalar.studio',
+			cover: true,
+			revision: 'Preview of example.com',
+			subtitle: 'Docs at https://example.com/docs',
+		})
+		expect(body).toContain(
+			'<p class="s2pdf-cover-subtitle">Docs at <a href="https://example.com/docs">https://example.com/docs</a></p>',
+		)
+		expect(body).toContain(
+			'<p class="s2pdf-cover-details">Scalar Studio, <a href="https://scalar.studio">scalar.studio</a><br>Preview of example.com · November 19, 2026</p>',
+		)
 	})
 })
 
@@ -321,5 +403,42 @@ describe('injectBody', () => {
 			return { banner: getBox('#banner'), custom: getBox('#custom') }
 		})
 		expect(boxes.banner).toEqual(boxes.custom)
+	})
+
+	it('should underline the links of the cover and back page in the color of their text', async () => {
+		const page = await openStartPage()
+		const body = await composeBody({
+			baseOrigin: origin,
+			contentsData: new Set(),
+			document: { date: '', title: 'Docs' },
+			htmlContent: '',
+			options: resolveOptions({
+				about: 'Online at example.com',
+				author: 'info@example.com',
+				contents: false,
+				cover: true,
+				notice: 'Licensed at https://example.com/license',
+				url: origin,
+			}),
+		})
+		// The site's text colors, and a style for links that would apply outside the docs content too
+		await inject(page, {
+			body,
+			stylesheets: [
+				'<style>:root { --sl-color-gray-2: rgb(51, 51, 51); --sl-color-gray-3: rgb(85, 85, 85); } a { color: red; text-decoration: none; }</style>',
+			],
+		})
+
+		const links = await page.$$eval('a', (elements) =>
+			elements.map((link) => {
+				const { color, textDecorationLine } = getComputedStyle(link)
+				return `${link.textContent}: ${color} ${textDecorationLine}`
+			}),
+		)
+		expect(links).toEqual([
+			'info@example.com: rgb(51, 51, 51) underline',
+			'example.com: rgb(51, 51, 51) underline',
+			'https://example.com/license: rgb(85, 85, 85) underline',
+		])
 	})
 })

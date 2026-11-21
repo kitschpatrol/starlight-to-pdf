@@ -20,10 +20,13 @@ const SPACING_REGEX = /^\d+(?:\.\d+)?(?:mm|in|cm|px|pt|pc)?$/v
 export type StarlightToPdfOptions = {
 	/**
 	 * Adds a back page with this text, such as a description of the project.
-	 * Blank lines separate paragraphs.
+	 * Blank lines separate paragraphs. Web and email addresses become links.
 	 */
 	about?: string | undefined
-	/** Author shown on the cover page, such as a person or an organization. */
+	/**
+	 * Author shown on the cover page, such as a person or an organization. Web
+	 * and email addresses become links.
+	 */
 	author?: string | undefined
 	/**
 	 * Path to a browser executable to use instead of the default one (e.g.
@@ -38,7 +41,8 @@ export type StarlightToPdfOptions = {
 	browserNoSandbox?: boolean | undefined
 	/**
 	 * Adds a back page with these contact details. Blank lines separate
-	 * paragraphs, and line breaks are kept.
+	 * paragraphs, and line breaks are kept. Web and email addresses become
+	 * links.
 	 */
 	contact?: string | undefined
 	/** Generate a table of contents with page numbers in the PDF. */
@@ -127,7 +131,8 @@ export type StarlightToPdfOptions = {
 	mediaLinks?: boolean | undefined
 	/**
 	 * Adds a back page with this notice, such as a confidentiality or copyright
-	 * notice. Blank lines separate paragraphs.
+	 * notice. Blank lines separate paragraphs. Web and email addresses become
+	 * links.
 	 */
 	notice?: string | undefined
 	/**
@@ -180,7 +185,7 @@ export type StarlightToPdfOptions = {
 	 * of special CSS classes used by the tool.
 	 */
 	styles?: string | undefined
-	/** Subtitle shown on the cover page. */
+	/** Subtitle shown on the cover page. Web and email addresses become links. */
 	subtitle?: string | undefined
 	/**
 	 * Timeout for both the page actions and `protocolTimeout` in milliseconds.

@@ -175,6 +175,9 @@ importers:
 
   .:
     dependencies:
+      linkifyjs:
+        specifier: ^4.4.0
+        version: 4.4.0
       lognow:
         specifier: ^0.8.9
         version: 0.8.9
@@ -4108,6 +4111,9 @@ packages:
 
   linguist-languages@9.5.0:
     resolution: {integrity: sha512-Wtg9O6iHNBYFJQVtPNwWCaWkNEqZqiCGI4gSkeH8TqvgZUyb1IUWmFSa9Z9UhT392/aX6Peoa91bH9sDah1ZVw==}
+
+  linkifyjs@4.4.0:
+    resolution: {integrity: sha512-InTexvtbai+2c+dEVGcc6O6P2DMVIiwD9a/i4zFroazOIYLOS6FSVmAJ7kFeumnCMx6/gQqNAkbUvgMubV4+MA==}
 
   load-plugin@6.0.3:
     resolution: {integrity: sha512-kc0X2FEUZr145odl68frm+lMJuQ23+rTXYmR6TImqPtbpmXC4vVXbWKDQ9IzndA0HfyQamWfKLhzsqGSTxE63w==}
@@ -10280,6 +10286,8 @@ snapshots:
   lines-and-columns@2.0.4: {}
 
   linguist-languages@9.5.0: {}
+
+  linkifyjs@4.4.0: {}
 
   load-plugin@6.0.3:
     dependencies:
