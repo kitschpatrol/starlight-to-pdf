@@ -235,12 +235,16 @@ function resolveFixtureName(path: string, requestCount: number, accept: string):
 }
 
 /**
- * Opens a page with the markup, and the headers of its response, serving the
- * fixture images by name from the page's origin, and without CORS from another
- * origin.
+ * Opens a page with the markup, and the headers of its response, in the shared
+ * browser or another one, serving the fixture images by name from the page's
+ * origin, and without CORS from another origin.
  */
-async function openFixture(body: string, headers: Record<string, string> = {}): Promise<Page> {
-	const page = await browser.newPage()
+async function openFixture(
+	body: string,
+	headers: Record<string, string> = {},
+	target: Browser = browser,
+): Promise<Page> {
+	const page = await target.newPage()
 	await page.setRequestInterception(true)
 	const requestCounts = new Map<string, number>()
 	page.on('request', (request) => {
@@ -719,55 +723,91 @@ describe('compressImages', () => {
 		})
 	})
 
-	it('should keep the orientation and the colors that the original image shows', async () => {
-		const page = await openFixture(`
-			<img id="rotated" src="/rotated.jpg" style="display: block; width: 50px">
-			<img id="wide-gamut" src="/wide-gamut.png" style="display: block; width: 400px">`)
-		// The average colors of the left and right halves of each image, in sRGB
-		const getColors = async (): Promise<number[][]> =>
-			page.$$eval('img', async (images) => {
-				const colors: number[][] = []
-				for (const image of images) {
-					const response = await fetch(image instanceof HTMLImageElement ? image.currentSrc : '')
-					const bitmap = await createImageBitmap(await response.blob())
-					const context = new OffscreenCanvas(2, 1).getContext('2d')
-					if (context === null) {
-						throw new Error('No canvas context')
-					}
+	// Linux and Windows machines without a GPU, such as CI runners, draw canvases
+	// in software, which can draw images differently than the default canvases on
+	// a Mac do
+	it.each([
+		{ args: [], canvases: 'default' },
+		{ args: ['--disable-accelerated-2d-canvas'], canvases: 'software' },
+	])(
+		'should keep the orientation and the colors that the original image shows on $canvases canvases',
+		async ({ args }) => {
+			const target = await puppeteer.launch({ args: ['--no-sandbox', ...args] })
+			try {
+				const page = await openFixture(
+					`<img id="rotated" src="/rotated.jpg" style="display: block; width: 50px">
+					<img id="wide-gamut" src="/wide-gamut.png" style="display: block; width: 400px">`,
+					{},
+					target,
+				)
+				// The average colors of the left and right halves of each image, in sRGB,
+				// from all of its pixels, since canvases without GPU acceleration shrink
+				// an image to 2 by 1 pixels as the average color of all of it
+				const getColors = async (): Promise<number[][]> =>
+					page.$$eval('img', async (images) => {
+						const colors: number[][] = []
+						for (const image of images) {
+							const response = await fetch(
+								image instanceof HTMLImageElement ? image.currentSrc : '',
+							)
+							const bitmap = await createImageBitmap(await response.blob())
+							const context = new OffscreenCanvas(bitmap.width, bitmap.height).getContext('2d')
+							if (context === null) {
+								throw new Error('No canvas context')
+							}
 
-					context.imageSmoothingQuality = 'high'
-					context.drawImage(bitmap, 0, 0, 2, 1)
-					colors.push([...context.getImageData(0, 0, 2, 1).data])
+							context.drawImage(bitmap, 0, 0)
+							const halfWidth = Math.floor(bitmap.width / 2)
+							const halves: number[] = []
+							for (const left of [0, halfWidth]) {
+								const { data } = context.getImageData(left, 0, halfWidth, bitmap.height)
+								for (let channel = 0; channel < 4; channel++) {
+									let sum = 0
+									for (let index = channel; index < data.length; index += 4) {
+										sum += data[index] ?? 0
+									}
+
+									halves.push(Math.round(sum / (data.length / 4)))
+								}
+							}
+
+							colors.push(halves)
+						}
+
+						return colors
+					})
+				const originalColors = await getColors()
+
+				await compress(page)
+
+				expect(await getImageState(page, '#rotated')).toMatchObject({
+					format: 'jpeg',
+					height: 200,
+					width: 100,
+				})
+				expect(await getImageState(page, '#wide-gamut')).toMatchObject({ format: 'jpeg' })
+				const colors = await getColors()
+				for (const [index, original] of originalColors.entries()) {
+					for (const [channel, value] of original.entries()) {
+						expect(Math.abs((colors[index]?.[channel] ?? 0) - value)).toBeLessThanOrEqual(6)
+					}
 				}
 
-				return colors
-			})
-		const originalColors = await getColors()
-
-		await compress(page)
-
-		expect(await getImageState(page, '#rotated')).toMatchObject({
-			format: 'jpeg',
-			height: 200,
-			width: 100,
-		})
-		expect(await getImageState(page, '#wide-gamut')).toMatchObject({ format: 'jpeg' })
-		const colors = await getColors()
-		for (const [index, original] of originalColors.entries()) {
-			for (const [channel, value] of original.entries()) {
-				expect(Math.abs((colors[index]?.[channel] ?? 0) - value)).toBeLessThanOrEqual(6)
+				// The rotated image shows its blue bottom on the left and its red top on
+				// the right, as the red values of its halves tell
+				const [rotatedColors = []] = originalColors
+				expect(rotatedColors[0]).toBeLessThan(50)
+				expect(rotatedColors[4]).toBeGreaterThan(200)
+				// The wide-gamut image shows a bluer right half than its stored values of
+				// 54 would in sRGB, so dropping its color profile would fail the
+				// comparison
+				expect(originalColors[1]?.[6]).toBeLessThan(54 - 6)
+			} finally {
+				await target.close()
 			}
-		}
-
-		// The rotated image shows its blue bottom on the left and its red top on the
-		// right, as the red values of its halves tell
-		const [rotatedColors = []] = originalColors
-		expect(rotatedColors[0]).toBeLessThan(50)
-		expect(rotatedColors[4]).toBeGreaterThan(200)
-		// The wide-gamut image shows a bluer right half than its stored values of 54
-		// would in sRGB, so dropping its color profile would fail the comparison
-		expect(originalColors[1]?.[6]).toBeLessThan(54 - 6)
-	})
+		},
+		30_000,
+	)
 
 	it('should keep the pixels of images on pages sized in CSS, whose printed size is unknown', async () => {
 		// The container narrows the image of twice the density at the measured
