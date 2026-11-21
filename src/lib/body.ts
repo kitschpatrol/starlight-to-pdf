@@ -305,8 +305,8 @@ export async function composeBody({
 										display: flex;
 										flex-direction: column;
 										gap: 1.5rem;
-										/* Fills the page area when printed */
-										height: 100vh;
+										/* Fills the page area when printed, and grows onto more pages when its text takes more room */
+										min-height: 100vh;
 										line-height: 1.5;
 										color: var(--sl-color-gray-2);
 									}
@@ -318,6 +318,11 @@ export async function composeBody({
 									/* A narrower measure for the large type of the generated cover, for better line breaks in long titles */
 									:is(.${CLASSNAMES.cover}-title, .${CLASSNAMES.cover}-details) {
 										max-width: 75%;
+									}
+
+									/* Sets the title two lines down from the top of the page area */
+									.${CLASSNAMES.cover}-title {
+										padding-top: 2lh;
 									}
 
 									/* A word longer than the measure runs into the space beside it rather than splitting */

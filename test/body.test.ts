@@ -258,6 +258,35 @@ describe('injectBody', () => {
 		expect(layout.wordLines).toBe(1)
 	})
 
+	it('should set the title two lines down and let a long cover grow onto another page', async () => {
+		const page = await openStartPage()
+		await injectCover(page, {
+			author: 'Scalar Studio',
+			subtitle: 'Library documentation '.repeat(60).trim(),
+			title: 'Implementation Guide',
+		})
+
+		const layout = await page.evaluate(() => {
+			const cover = document.querySelector('.s2pdf-cover')
+			const title = document.querySelector('.s2pdf-cover h1')
+			if (cover === null || title === null) {
+				throw new Error('No cover')
+			}
+
+			return {
+				clientHeight: cover.clientHeight,
+				scrollHeight: cover.scrollHeight,
+				titleOffset: title.getBoundingClientRect().top - cover.getBoundingClientRect().top,
+				viewportHeight: window.innerHeight,
+			}
+		})
+		// Two lines of 16px text at the line height of 1.5 of the cover
+		expect(layout.titleOffset).toBeCloseTo(48)
+		// The text takes more than a page, and the cover holds all of it
+		expect(layout.clientHeight).toBeGreaterThan(layout.viewportHeight)
+		expect(layout.scrollHeight).toBe(layout.clientHeight)
+	})
+
 	it('should leave the layout of custom covers to them', async () => {
 		const page = await openStartPage()
 		await injectCover(
