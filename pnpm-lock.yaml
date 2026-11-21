@@ -175,6 +175,9 @@ importers:
 
   .:
     dependencies:
+      '@neslinesli93/qpdf-wasm':
+        specifier: ^0.3.1
+        version: 0.3.1
       linkifyjs:
         specifier: ^4.4.0
         version: 4.4.0
@@ -1102,6 +1105,9 @@ packages:
     peerDependencies:
       '@emnapi/core': ^1.7.1 || 2.0.0-beta.2 || 2.0.0-beta.3
       '@emnapi/runtime': ^1.7.1 || 2.0.0-beta.2 || 2.0.0-beta.3
+
+  '@neslinesli93/qpdf-wasm@0.3.1':
+    resolution: {integrity: sha512-pN6wK7JSq66dtmFpncxPAvuOrILm+sdrm1SI8ZKMCl3TSKKHQeCXoes4p8gXNez8dpEhZ0st+qeN4tLbeCm3kw==}
 
   '@nodable/entities@3.1.0':
     resolution: {integrity: sha512-LsS/DjHr+uDM647Gru/cA8+J3a3HfhttwCKLyuoyN7yXTFCxKBtSgMQBvrW9yNPa2/zDRUNuGPaH5QUFoa4arQ==}
@@ -7325,6 +7331,8 @@ snapshots:
       '@emnapi/runtime': 1.11.3
       '@tybys/wasm-util': 0.10.5
     optional: true
+
+  '@neslinesli93/qpdf-wasm@0.3.1': {}
 
   '@nodable/entities@3.1.0': {}
 

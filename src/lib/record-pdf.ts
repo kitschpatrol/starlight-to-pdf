@@ -2,11 +2,42 @@ import type { Page, PDFOptions } from 'puppeteer'
 import { mkdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import type { ResolvedOptions } from './types'
+import compressPdf from './compress-pdf'
 import { fillContentsPageNumbers } from './contents-page-numbers'
 import errorCatcher from './error-catcher'
 import { ParsingError } from './errors'
 import { log } from './log'
 import { resolveLinkDestinations } from './resolve-link-destinations'
+
+function formatKilobytes(bytes: number): string {
+	return `${Math.round(bytes / 1000).toLocaleString('en-US')} kB`
+}
+
+/**
+ * Compresses the PDF without loss, keeping it as Chrome printed it when
+ * compression fails or doesn't make it smaller, since that PDF is complete.
+ */
+async function compress(pdf: Uint8Array, pdfPath: string): Promise<Uint8Array> {
+	log.info('Compressing the PDF.')
+	const [error, compressed] = await errorCatcher(compressPdf(pdf))
+	if (error) {
+		log.warn(
+			`Couldn't compress the PDF file ${pdfPath}, so it's saved as Chrome printed it: ${error.message}`,
+		)
+		return pdf
+	}
+
+	if (compressed.length >= pdf.length) {
+		log.info(`Compression didn't make the PDF smaller, so it's saved as it is.`)
+		return pdf
+	}
+
+	const savedPercent = Math.round((1 - compressed.length / pdf.length) * 100)
+	log.info(
+		`Compressed the PDF from ${formatKilobytes(pdf.length)} to ${formatKilobytes(compressed.length)}, ${savedPercent}% smaller.`,
+	)
+	return compressed
+}
 
 /** Renders the page to a PDF in memory, failing with the path it was meant for. */
 async function renderPdf(page: Page, pdfOptions: PDFOptions, pdfPath: string): Promise<Uint8Array> {
@@ -68,10 +99,14 @@ async function recordPdf({ hostname, options, page }: RecordPdfParams): Promise<
 		chromePdf = await renderPdf(page, pdfOptions, pdfPath)
 	}
 
-	const { linkCount, pdf } = resolveLinkDestinations(chromePdf)
+	// Reads the single cross-reference table that Chrome writes, so it runs
+	// before compression, which writes object streams instead
+	const { linkCount, pdf: linkedPdf } = resolveLinkDestinations(chromePdf)
 	if (linkCount > 0) {
 		log.info(`Pointed ${linkCount} internal link(s) straight at their page.`)
 	}
+
+	const pdf = await compress(linkedPdf, pdfPath)
 
 	const [writeError] = await errorCatcher(writeFile(pdfPath, pdf))
 	if (writeError) {
